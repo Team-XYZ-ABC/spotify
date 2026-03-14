@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
-import config from "./env.config.js";
+import CONFIG from "./env.config.js";
 
 const connectDB = async()=>{
     try{
-        await mongoose.connect(config.MONGO_URI)
-        console.log("DB connected")
+        const conn = await mongoose.connect(CONFIG.MONGO_URI)
+        console.log(`DB CONNECTED ON HOST: ${conn.connection.host}`);
     }catch(err){
-        console.log(err)
+        console.log(err.message)
     }
 }
 export default connectDB

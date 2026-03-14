@@ -2,9 +2,10 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-const config = {
+const CONFIG = {
     PORT: process.env.PORT,
-    MONGO_URI: process.env.MONGO_URI
+    MONGO_URI: process.env.MONGO_URI,
+    SERVER_HOST: process.env.SERVER_HOST
 }
 
-export default config
+export default CONFIG

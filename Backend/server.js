@@ -1,10 +1,10 @@
 import express from 'express';
 import app from './src/app.js';
-import config from './src/configs/env.config.js'
 import connectDB from './src/configs/db.config.js';
+import CONFIG from './src/configs/env.config.js';
 
 connectDB()
 
-app.listen(config.PORT, ()=>{
-    console.log(`server is running on port ${config.PORT}`)
+app.listen(CONFIG.PORT, ()=>{
+    console.log(`SERVER RUNNING ON HOST: ${CONFIG.SERVER_HOST}`)
 })
