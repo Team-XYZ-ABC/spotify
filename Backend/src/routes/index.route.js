@@ -28,3 +28,5 @@ indexRouter.use("/recommendations", recommendationRouter);
 indexRouter.use("/admin", adminRouter);
 
 export default indexRouter;
+
+// http://localhost:3000/api/v1/recommendations
