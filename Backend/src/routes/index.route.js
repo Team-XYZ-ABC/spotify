@@ -20,6 +20,7 @@ indexRouter.use("/artists", artistRouter);
 indexRouter.use("/tracks", trackRouter);
 indexRouter.use("/albums", albumRouter);
 indexRouter.use("/playlists", playlistRouter);
+
 indexRouter.use("/follow", followRouter);
 indexRouter.use("/library", libraryRouter);
 indexRouter.use("/search", searchRouter);
