@@ -1,10 +1,16 @@
 import { Router } from "express";
-import {registerUser, loginUser, logout} from '../controllers/Authentication.controller.js'
+import {userRegisterUser, userLoginUser, userLogout, artistRegisterUser, artistLoginUser, artistLogout} from '../controllers/Authentication.controller.js'
 
 const authRouter = Router()
 
-authRouter.post('/register', registerUser)
-authRouter.post('/login', loginUser)
-authRouter.get('/logout', logout)
+authRouter.post('/users/register', userRegisterUser)
+authRouter.post('/users/login', userLoginUser)
+authRouter.post('/users/logout', userLogout)
+
+authRouter.post('/artists/register', artistRegisterUser)
+authRouter.post('/artists/login', artistLoginUser)
+authRouter.post('/artists/logout', artistLogout)
+
+
 
 export default authRouter
