@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
     {
-        // BASIC INFO
         displayName: {
             type: String,
             required: true,
@@ -46,8 +45,6 @@ const userSchema = new mongoose.Schema(
         birthDate: {
             type: Date
         },
-
-        // ROLE SYSTEM
         role: {
             type: String,
             enum: ["listener", "artist", "admin"],
@@ -59,8 +56,6 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false
         },
-
-        // AUTH SYSTEM
         refreshToken: {
             type: String
         },
@@ -73,8 +68,6 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: true
         },
-
-        // SUBSCRIPTION (Spotify Premium type)
         subscription: {
             type: {
                 type: String,
@@ -88,8 +81,6 @@ const userSchema = new mongoose.Schema(
 
             paymentProvider: String
         },
-
-        // FOLLOW SYSTEM
         followersCount: {
             type: Number,
             default: 0
