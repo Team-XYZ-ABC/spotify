@@ -91,7 +91,6 @@ const userSchema = new mongoose.Schema(
             default: 0
         },
 
-        // LISTENING STATS
         totalListeningTime: {
             type: Number,
             default: 0
@@ -102,7 +101,6 @@ const userSchema = new mongoose.Schema(
             default: 0
         },
 
-        // USER PREFERENCES
         preferences: {
             language: {
                 type: String,
@@ -126,7 +124,6 @@ const userSchema = new mongoose.Schema(
             }
         },
 
-        // DEVICES (Spotify Connect type future feature)
         devices: [
             {
                 deviceId: String,
@@ -136,7 +133,6 @@ const userSchema = new mongoose.Schema(
             }
         ],
 
-        // SECURITY
         loginHistory: [
             {
                 ip: String,
@@ -146,7 +142,6 @@ const userSchema = new mongoose.Schema(
             }
         ],
 
-        // FEATURE FLAGS
         features: {
             betaUser: {
                 type: Boolean,
