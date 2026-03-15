@@ -1,12 +1,25 @@
-export const registerUser = async(req, res)=>{
-    res.send("register")
+export const userRegisterUser = async(req, res)=>{
+    res.send("user register")
 }
 
 
-export const loginUser = async(req, res)=>{
-    res.send("login")
+export const userLoginUser = async(req, res)=>{
+    res.send("user login")
 }
 
-export const logout = async(req, res)=>{
-    res.send("logout")
+export const userLogout = async(req, res)=>{
+    res.send("user logout")
+}
+
+
+export const artistRegisterUser = async(req, res)=>{
+    res.send("artist register")
+}
+
+export const artistLoginUser = async(req, res)=>{
+    res.send("artist login")
+}
+
+export const artistLogout = async(req, res)=>{
+    res.send("artist logout")
 }
