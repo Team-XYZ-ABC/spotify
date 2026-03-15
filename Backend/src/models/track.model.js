@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const trackSchema = new mongoose.Schema(
     {
-        // BASIC INFO
         title: {
             type: String,
             required: true,
