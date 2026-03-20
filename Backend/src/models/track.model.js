@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const trackSchema = new mongoose.Schema(
     {
-        // BASIC INFO
         title: {
             type: String,
             required: true,
@@ -104,4 +103,6 @@ trackSchema.index({ title: "text" });
 trackSchema.index({ artists: 1 });
 trackSchema.index({ album: 1 });
 
-export const TrackModel = mongoose.model("Tracks", trackSchema);
+const TrackModel = mongoose.model("Tracks", trackSchema);
+
+export default TrackModel

@@ -46,17 +46,18 @@ const userSchema = new mongoose.Schema(
         birthDate: {
             type: Date
         },
+
         role: {
             type: String,
             enum: ["listener", "artist", "admin"],
             default: "listener",
-            index: true
         },
 
         isVerified: {
             type: Boolean,
             default: false
         },
+
         refreshToken: {
             type: String
         },
@@ -69,19 +70,18 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: true
         },
+
         subscription: {
             type: {
                 type: String,
                 enum: ["free", "premium", "family", "student"],
                 default: "free"
             },
-
             startDate: Date,
-
             expiryDate: Date,
-
             paymentProvider: String
         },
+
         followersCount: {
             type: Number,
             default: 0
@@ -123,31 +123,6 @@ const userSchema = new mongoose.Schema(
                 enum: ["low", "normal", "high", "very_high"],
                 default: "high"
             }
-        },
-
-        devices: [
-            {
-                deviceId: String,
-                deviceName: String,
-                deviceType: String,
-                lastActive: Date
-            }
-        ],
-
-        loginHistory: [
-            {
-                ip: String,
-                device: String,
-                location: String,
-                loginAt: Date
-            }
-        ],
-
-        features: {
-            betaUser: {
-                type: Boolean,
-                default: false
-            }
         }
 
     },
@@ -156,4 +131,6 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-export const UserModel = mongoose.model("Users", userSchema);
+const UserModel = mongoose.model("Users", userSchema);
+
+export default UserModel;
