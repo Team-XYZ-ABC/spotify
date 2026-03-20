@@ -4,10 +4,9 @@ import { followArtist, getArtistFollowers, unfollowArtist } from "../controllers
 
 const followRouter = Router();
 
-// ARTIST FOLLOW SYSTEM
 followRouter.post("/artist/:artistId", followArtist);
 followRouter.delete("/artist/:artistId", unfollowArtist);
-followRouter.get("/artist/:artistId/followers", getArtistFollowers);
+followRouter.get("/artist/:artistId/followers", authRole('artist'), getArtistFollowers);
 
 
 export default followRouter;
