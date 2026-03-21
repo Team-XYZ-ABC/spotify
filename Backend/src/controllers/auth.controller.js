@@ -48,6 +48,8 @@ export const registerUser = async (req, res) => {
             role
         });
 
+        
+
         await newUser.save();
 
         const token = jwtSign(newUser);
@@ -114,6 +116,13 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
+
+        const token = req.cookies.token;
+
+        if (!token) {
+            return res.status(400).json({ message: "Unauthorized." });
+        }
+
         res.clearCookie('token', {
             httpOnly: true,
             secure: CONFIG.NODE_ENV === 'production',
