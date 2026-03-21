@@ -1,5 +1,4 @@
 import UserModel from "../models/user.model.js"
-import jwt from 'jsonwebtoken'
 import CONFIG from "../configs/env.config.js"
 import bcrypt from 'bcrypt'
 import { jwtSign, jwtVerify } from "../services/jwt.service.js"
@@ -68,7 +67,8 @@ export const registerUser = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({
-            message: "Server error", error: error.message
+            message: "Server error",
+            error: error.message
         })
     }
 }
