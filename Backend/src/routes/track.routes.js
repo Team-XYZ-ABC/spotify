@@ -7,10 +7,14 @@ import {
   getTrackLyrics,
   getTrackCredits,
   getTrackRecommendations,
-  uploadTrack,
   updateTrack,
-  deleteTrack
+  deleteTrack,
+  uploadSingle,
+  uploadImage,
+  uploadTrack,
+  uploadMultiple
 } from "../controllers/track.controller.js";
+import upload from "../middlewares/multer.js";
 
 const trackRouter = Router();
 
@@ -28,7 +32,14 @@ trackRouter.get("/:trackId/credits", getTrackCredits);
 
 trackRouter.get("/:trackId/recommendations", getTrackRecommendations);
 
-trackRouter.post("/artist/upload", uploadTrack);
+trackRouter.post("/artist/upload/single",upload.single("file"), uploadSingle);
+
+trackRouter.post("/artist/upload/image",upload.single("file"), uploadImage);
+
+trackRouter.post("/artist/upload/track",upload.single("file"), uploadTrack);
+
+trackRouter.post("/artist/upload/multiple",upload.array("files"), uploadMultiple);
+
 
 trackRouter.patch("/artist/:trackId", updateTrack);
 
