@@ -1,59 +1,169 @@
 import UserModel from "../models/user.model.js"
 import jwt from 'jsonwebtoken'
 import CONFIG from "../configs/env.config.js"
-import ArtistModel from "../models/artist.model.js"
+import bcrypt from 'bcrypt'
 
-export const userRegisterUser = async(req, res)=>{
-    const {email, password, username, role, displayName} = req.body
+export const registerUser = async (req, res) => {
+    const { displayName, username, email, password, role } = req.body;
 
-    if (!email || !password || !username || !displayName){
-        return res.status(400).json({
-            message: "All field are required",
-            success: false
+    try {
+        if (!displayName) {
+            return res.status(400).json({ message: "Display name is required" });
+        }
+
+        if (!username) {
+            return res.status(400).json({ message: "Username is required" });
+        }
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        if (!password) {
+            return res.status(400).json({ message: "Password is required" });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long" });
+        }
+
+        const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
+
+        if (existingUser?.email === email) {
+            return res.status(400).json({ message: "Email already in use" });
+        }
+
+        if (existingUser?.username === username) {
+            return res.status(400).json({ message: "Username already in use" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = new UserModel({
+            displayName,
+            username,
+            email,
+            password: hashedPassword,
+            role
+        });
+
+        await newUser.save();
+
+        const token = jwt.sign({ userId: newUser._id, email: newUser.email, role: newUser.role }, CONFIG.JWT_SECRET_KEY, { expiresIn: '7d' });
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: CONFIG.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(201).json({
+            message: "User registered successfully",
+            token,
+            user: {
+                id: newUser._id,
+                displayName: newUser.displayName,
+                username: newUser.username,
+                email: newUser.email,
+                role: newUser.role
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error", error: error.message
         })
     }
+}
 
-    const user = await UserModel.create({
-        email, password, username, role, displayName
-    })
+export const loginUser = async (req, res) => {
+    const { email, password } = req.body;
 
-    if(user.role === 'artist' ){
-        await ArtistModel.create({
-            user: user._id
+    try {
+        const user = await UserModel.findOne({ email }).select('+password');
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        const token = jwt.sign({ userId: user._id, email: user.email, role: user.role }, CONFIG.JWT_SECRET_KEY, { expiresIn: '7d' });
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: CONFIG.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json({
+            message: "User logged in successfully",
+            token,
+            user: {
+                id: user._id,
+                displayName: user.displayName,
+                username: user.username,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error", error: error.message
         })
     }
-
-
-    const token = jwt.sign({user}, CONFIG.JWT_SECRET_KEY, {expiresIn: '1d'} )
-
-    res.cookie("token", token , {
-        maxAge: 24 * 60 * 60 * 1000
-    })
-    
-    res.status(201).json({
-        message: "User registered successfully",
-        user
-    })
 }
 
+export const logoutUser = async (req, res) => {
+    try {
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: CONFIG.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
 
-export const userLoginUser = async(req, res)=>{
-    res.send("user login")
+        res.status(200).json({ message: "User logged out successfully" });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Server error", error: error.message
+        })
+    }
 }
 
-export const userLogout = async(req, res)=>{
-    res.send("user logout")
-}
+export const GetCurrentUser = async (req, res) => {
+    try {
+        const token = req.cookies.token;
 
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
-export const artistRegisterUser = async(req, res)=>{
-    res.send("artist register")
-}
+        const decoded = jwt.verify(token, CONFIG.JWT_SECRET_KEY);
 
-export const artistLoginUser = async(req, res)=>{
-    res.send("artist login")
-}
+        const user = await UserModel.findById(decoded.userId);
 
-export const artistLogout = async(req, res)=>{
-    res.send("artist logout")
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({
+            user: {
+                id: user._id,
+                displayName: user.displayName,
+                username: user.username,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error", error: error.message
+        })
+    }
 }
