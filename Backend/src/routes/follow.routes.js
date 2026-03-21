@@ -1,4 +1,5 @@
 import { Router } from "express";
+import authRole from "../middlewares/authRole.middleware.js";
 import { followArtist, getArtistFollowers, unfollowArtist } from "../controllers/follow.controller.js";
 
 
