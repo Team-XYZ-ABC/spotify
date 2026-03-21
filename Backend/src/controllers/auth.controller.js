@@ -2,6 +2,7 @@ import UserModel from "../models/user.model.js"
 import jwt from 'jsonwebtoken'
 import CONFIG from "../configs/env.config.js"
 import bcrypt from 'bcrypt'
+import { jwtSign, jwtVerify } from "../services/jwt.service.js"
 
 export const registerUser = async (req, res) => {
     const { displayName, username, email, password, role } = req.body;
@@ -49,7 +50,7 @@ export const registerUser = async (req, res) => {
 
         await newUser.save();
 
-        const token = jwt.sign({ userId: newUser._id, email: newUser.email, role: newUser.role }, CONFIG.JWT_SECRET_KEY, { expiresIn: '7d' });
+        const token = jwtSign(newUser);
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -92,7 +93,7 @@ export const loginUser = async (req, res) => {
             return res.status(400).json({ message: "Invalid email or password" });
         }
 
-        const token = jwt.sign({ userId: user._id, email: user.email, role: user.role }, CONFIG.JWT_SECRET_KEY, { expiresIn: '7d' });
+        const token = jwtSign(user);
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -144,7 +145,7 @@ export const GetCurrentUser = async (req, res) => {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        const decoded = jwt.verify(token, CONFIG.JWT_SECRET_KEY);
+        const decoded = jwtVerify(token);
 
         const user = await UserModel.findById(decoded.userId);
 
