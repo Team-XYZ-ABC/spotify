@@ -61,12 +61,8 @@ export const registerUser = async (req, res) => {
 
         res.status(201).json({
             message: "User registered successfully",
-            token,
             user: {
                 id: newUser._id,
-                displayName: newUser.displayName,
-                username: newUser.username,
-                email: newUser.email,
                 role: newUser.role
             }
         });
@@ -104,12 +100,8 @@ export const loginUser = async (req, res) => {
 
         res.status(200).json({
             message: "User logged in successfully",
-            token,
             user: {
                 id: user._id,
-                displayName: user.displayName,
-                username: user.username,
-                email: user.email,
                 role: user.role
             }
         });
@@ -156,9 +148,6 @@ export const GetCurrentUser = async (req, res) => {
         res.status(200).json({
             user: {
                 id: user._id,
-                displayName: user.displayName,
-                username: user.username,
-                email: user.email,
                 role: user.role
             }
         });
