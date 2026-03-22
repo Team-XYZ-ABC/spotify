@@ -12,7 +12,11 @@ const userSchema = new mongoose.Schema(
             type: String,
             unique: true,
             sparse: true,
-            index: true
+            lowercase: true,
+            trim: true,
+            minlength: 3,
+            maxlength: 20,
+            match: [/^[a-z0-9_]+$/, "Invalid username"]
         },
 
         email: {
@@ -20,7 +24,7 @@ const userSchema = new mongoose.Schema(
             required: true,
             unique: true,
             lowercase: true,
-            index: true
+            match: [/^\S+@\S+\.\S+$/, "Invalid email"]
         },
 
         password: {
@@ -39,18 +43,14 @@ const userSchema = new mongoose.Schema(
             default: ""
         },
 
-        country: {
-            type: String
-        },
+        country: String,
 
-        birthDate: {
-            type: Date
-        },
+        birthDate: Date,
 
         role: {
             type: String,
             enum: ["listener", "artist", "admin"],
-            default: "listener",
+            default: "listener"
         },
 
         isVerified: {
@@ -59,12 +59,11 @@ const userSchema = new mongoose.Schema(
         },
 
         refreshToken: {
-            type: String
+            type: String,
+            select: false // 🔐 important
         },
 
-        lastLogin: {
-            type: Date
-        },
+        lastLogin: Date,
 
         isActive: {
             type: Boolean,
@@ -107,17 +106,14 @@ const userSchema = new mongoose.Schema(
                 type: String,
                 default: "en"
             },
-
             explicitContent: {
                 type: Boolean,
                 default: true
             },
-
             autoplay: {
                 type: Boolean,
                 default: true
             },
-
             audioQuality: {
                 type: String,
                 enum: ["low", "normal", "high", "very_high"],
