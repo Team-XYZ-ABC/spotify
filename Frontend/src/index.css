@@ -19,6 +19,10 @@ body {
   font-family: SpotifyRegular, sans-serif;
 }
 
+.bg-primary{
+  background-color: #111111;
+}
+
 .font-regular {
   font-family: SpotifyRegular, sans-serif;
 }
