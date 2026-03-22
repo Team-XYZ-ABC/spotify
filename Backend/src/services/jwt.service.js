@@ -3,7 +3,7 @@ import CONFIG from '../configs/env.config.js'
 
 export const jwtSign = (user)=>{
     const token = jwt.sign({
-        id: user._id,
+        id: user.id,
         role: user.role
     }, CONFIG.JWT_SECRET_KEY, {expiresIn: '7d'})
     return token
