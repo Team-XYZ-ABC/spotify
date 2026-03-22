@@ -11,6 +11,8 @@ import {
   updateTrack,
   deleteTrack
 } from "../controllers/track.controller.js";
+import authRole from "../middlewares/authRole.middleware.js";
+import isAuthenticated from "../middlewares/auth.middleware.js";
 
 const trackRouter = Router();
 
@@ -28,7 +30,7 @@ trackRouter.get("/:trackId/credits", getTrackCredits);
 
 trackRouter.get("/:trackId/recommendations", getTrackRecommendations);
 
-trackRouter.post("/artist/upload", uploadTrack);
+trackRouter.post("/artist/upload",isAuthenticated, authRole(['artist']), uploadTrack);
 
 trackRouter.patch("/artist/:trackId", updateTrack);
 
