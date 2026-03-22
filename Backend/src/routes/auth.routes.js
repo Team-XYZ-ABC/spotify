@@ -3,9 +3,9 @@ import { GetCurrentUser, loginUser, logoutUser, registerUser } from "../controll
 
 const authRouter = Router()
 
-authRouter.post('/users/register', registerUser)
-authRouter.post('/users/login', loginUser)
-authRouter.post('/users/logout', logoutUser)
-authRouter.get('/users/profile', GetCurrentUser)
+authRouter.post('/register', registerUser)
+authRouter.post('/login', loginUser)
+authRouter.post('/logout', logoutUser)
+authRouter.get('/me', GetCurrentUser)
 
 export default authRouter
