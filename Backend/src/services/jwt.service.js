@@ -9,7 +9,7 @@ export const jwtSign = (user)=>{
     return token
 }
 
-export const jwtVerify = async(token)=>{
+export const jwtVerify = (token)=>{
     const decoded = jwt.verify(token, CONFIG.JWT_SECRET_KEY)
     return decoded
 }
