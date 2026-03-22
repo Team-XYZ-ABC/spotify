@@ -2,61 +2,80 @@ import UserModel from "../models/user.model.js"
 import CONFIG from "../configs/env.config.js"
 import bcrypt from 'bcrypt'
 import { jwtSign, jwtVerify } from "../services/jwt.service.js"
+import mongoose from "mongoose"
 
 export const registerUser = async (req, res) => {
-    const { displayName, username, email, password, role } = req.body;
+    const session = await mongoose.startSession();
 
     try {
-        if (!displayName) {
-            return res.status(400).json({ message: "Display name is required" });
-        }
+        let { displayName, username, email, password, role } = req.body;
 
-        if (!username) {
-            return res.status(400).json({ message: "Username is required" });
-        }
-
-        if (!email) {
-            return res.status(400).json({ message: "Email is required" });
-        }
-
-        if (!password) {
-            return res.status(400).json({ message: "Password is required" });
+        if (!displayName || !username || !email || !password) {
+            return res.status(400).json({
+                message: "All fields are required"
+            });
         }
 
         if (password.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters long" });
+            return res.status(400).json({
+                message: "Password must be at least 6 characters long"
+            });
         }
 
-        const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
+        email = email.toLowerCase();
+        username = username.toLowerCase().trim();
 
-        if (existingUser?.email === email) {
-            return res.status(400).json({ message: "Email already in use" });
+        const existingUser = await UserModel.findOne({
+            $or: [{ email }, { username }]
+        });
+
+        if (existingUser) {
+            return res.status(400).json({
+                message:
+                    existingUser.email === email
+                        ? "Email already in use"
+                        : "Username already in use"
+            });
         }
 
-        if (existingUser?.username === username) {
-            return res.status(400).json({ message: "Username already in use" });
-        }
+        const allowedRoles = ["listener", "artist"];
+        const userRole = allowedRoles.includes(role) ? role : "listener";
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = new UserModel({
-            displayName,
-            username,
-            email,
-            password: hashedPassword,
-            role
+        session.startTransaction();
+
+        const [newUser] = await UserModel.create(
+            [{
+                displayName,
+                username,
+                email,
+                password: hashedPassword,
+                role: userRole
+            }],
+            { session }
+        );
+
+        if (userRole === "artist") {
+            await ArtistModel.create(
+                [{
+                    user: newUser._id
+                }],
+                { session }
+            );
+        }
+
+        await session.commitTransaction();
+
+        const token = jwtSign({
+            id: newUser._id,
+            role: newUser.role
         });
 
-        
-
-        await newUser.save();
-
-        const token = jwtSign(newUser);
-
-        res.cookie('token', token, {
+        res.cookie("token", token, {
             httpOnly: true,
-            secure: CONFIG.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: CONFIG.NODE_ENV === "production",
+            sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -64,16 +83,23 @@ export const registerUser = async (req, res) => {
             message: "User registered successfully",
             user: {
                 id: newUser._id,
+                username: newUser.username,
                 role: newUser.role
             }
         });
+
     } catch (error) {
+
+        await session.abortTransaction();
+
         res.status(500).json({
-            message: "Server error",
-            error: error.message
-        })
+            message: error.message
+        });
+
+    } finally {
+        session.endSession();
     }
-}
+};
 
 export const loginUser = async (req, res) => {
     const { email, password } = req.body;
