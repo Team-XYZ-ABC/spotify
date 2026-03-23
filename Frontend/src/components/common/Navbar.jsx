@@ -8,11 +8,8 @@ const Navbar = ({ toggleSidebar }) => {
         <img
           src="/img/spotify_logo_white.png"
           alt="logo"
-          className="h-8 w-8"
+          className="h-10 w-10"
         />
-        <span className="font-bold text-lg hidden sm:block">
-          Spotify
-        </span>
       </Link>
       <div className="hidden md:flex items-center bg-[#121212] px-4 py-3 rounded-full w-[40%]">
         <input
