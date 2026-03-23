@@ -16,6 +16,12 @@ const trackRouter = Router();
 
 trackRouter.get("/:trackId", getTrack);
 
+trackRouter.post("/artist/upload", uploadTrack);
+
+trackRouter.patch("/artist/:trackId", updateTrack);
+
+trackRouter.delete("/artist/:trackId", deleteTrack);
+
 trackRouter.get("/:trackId/stream", streamTrack);
 
 trackRouter.post("/:trackId/like", likeTrack);
@@ -28,10 +34,5 @@ trackRouter.get("/:trackId/credits", getTrackCredits);
 
 trackRouter.get("/:trackId/recommendations", getTrackRecommendations);
 
-trackRouter.post("/artist/upload", uploadTrack);
-
-trackRouter.patch("/artist/:trackId", updateTrack);
-
-trackRouter.delete("/artist/:trackId", deleteTrack);
 
 export default trackRouter;
