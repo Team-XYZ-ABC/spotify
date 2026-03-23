@@ -42,9 +42,11 @@ const Register = () => {
           Use phone number instead.
         </Link>
 
-        <button className="bg-green-500 cursor-pointer text-black font-bold py-3 rounded-full active:scale-95 transition">
-          Next
-        </button>
+        <Link to={'/registerstep1'}>
+          <button className="bg-green-500 w-full cursor-pointer text-black font-bold py-3 rounded-full active:scale-95 transition">
+            Next
+          </button>
+        </Link>
 
         <div className="flex items-center gap-3">
           <div className="h-px bg-gray-600 flex-1"></div>

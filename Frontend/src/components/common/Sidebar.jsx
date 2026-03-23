@@ -2,7 +2,9 @@ import React from 'react'
 
 const Sidebar = () => {
   return (
-    <div>Sidebar</div>
+    <div className='w-[20%] rounded-lg bg-zinc-900'>
+
+    </div>
   )
 }
 

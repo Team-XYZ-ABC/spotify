@@ -6,32 +6,37 @@ import Feed from "../components/common/Feed";
 import App from "../App";
 import PhoneNumber from "../pages/auth/PhoneNumber";
 import VerifyOtp from "../pages/auth/VerifyOtp";
+import RegisterStep1 from "../pages/auth/RegisterStep1";
 
 export const Router = createBrowserRouter([
     {
-        path: '/',
+        path: "/",
         element: <App />,
         children: [
             {
-                path: '/register',
-                element: <Register />
+                path: "/",
+                element: <Home />,
             },
             {
-                path: '/login',
-                element: <Login />
+                path: "/register",
+                element: <Register />,
             },
             {
-                path: '/phoneRegister',
-                element: <PhoneNumber />
+                path: '/registerstep1',
+                element: <RegisterStep1/>
             },
             {
-                path: '/verifyOtp',
-                element: <VerifyOtp />
+                path: "/login",
+                element: <Login />,
             },
             {
-                path: '/Home',
-                element: <Home />
+                path: "/phoneRegister",
+                element: <PhoneNumber />,
             },
-        ]
-    }
-])
+            {
+                path: "/verifyOtp",
+                element: <VerifyOtp />,
+            },
+        ],
+    },
+]);

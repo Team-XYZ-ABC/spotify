@@ -29,6 +29,7 @@ const VerifyOtp = () => {
 
     const handlePaste = (e) => {
         const paste = e.clipboardData.getData("text").slice(0, 6);
+        console.log(paste)
         if (!/^[0-9]+$/.test(paste)) return;
 
         const newOtp = paste.split("");
