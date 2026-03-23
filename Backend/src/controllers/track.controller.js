@@ -1,4 +1,6 @@
-import { uploadFile } from "../services/storage.services.js";
+import { uploadSong } from "../services/imagekit.service.js";
+import TrackModel from "../models/track.model.js";
+import { generateISRC } from "../utils.js";
 
 
 
@@ -30,106 +32,78 @@ export const getTrackRecommendations = (req, res) => {
   res.send("GET TRACK RECOMMENDATIONS");
 };
 
-export const uploadSingle = async (req, res) => {
-  try {
-    const file = req.file;
-    console.log(file)
-
-    if (!file) {
-      return res.status(400).json({ message: "No file provided" });
-    }
-
-    const result = await uploadFile(
-      file.buffer,
-      file.originalname,
-      "uploads/single"
-    );
-
-    res.json({
-      message: "File uploaded",
-      data: result,
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const uploadImage = async (req, res) => {
-  try {
-    const file = req.file;
-
-    if (!file) {
-      return res.status(400).json({ message: "No file" });
-    }
-
-    if (!file.mimetype.startsWith("image")) {
-      return res.status(400).json({ message: "Only image allowed" });
-    }
-
-    const result = await uploadFile(
-      file.buffer,
-      file.originalname,
-      "uploads/images"
-    );
-
-    res.json({ message: "Image uploaded", data: result });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 export const uploadTrack = async (req, res) => {
   try {
     const file = req.file;
 
+    const {
+      title,
+      artists,
+      album,
+      genres,
+      lang,
+      isExplicit,
+      copyrightOwner,
+      isrc,
+      availableCountries,
+      coverImage
+    } = req.body;
+
+    const primaryArtist = req.user.id;
+
     if (!file) {
-      return res.status(400).json({ message: "No file" });
+      return res.status(400).json({ message: "No file provided" });
     }
 
-    if (!file.mimetype.startsWith("audio")) {
-      return res.status(400).json({ message: "Only audio allowed" });
+    if (!title) {
+      return res.status(400).json({
+        message: "title is required",
+      });
     }
 
-    const result = await uploadFile(
+    const result = await uploadSong(
       file.buffer,
       file.originalname,
-      "uploads/tracks"
+      "uploads/track"
     );
 
-    res.json({ message: "Track uploaded", data: result });
+    const track = await TrackModel.create({
+      title,
+      duration: result.duration,
+      audioUrl: result.url,
+
+      primaryArtist,
+      artists: artists ? JSON.parse(artists) : [primaryArtist],
+
+      album: album || null,
+      genres: genres ? JSON.parse(genres) : [],
+      lang: lang || null,
+
+      isExplicit: isExplicit === "true",
+
+      copyrightOwner: copyrightOwner || null,
+      isrc: isrc || generateISRC(),
+
+      availableCountries: availableCountries
+        ? JSON.parse(availableCountries)
+        : [],
+
+      coverImage: coverImage || null,
+    });
+
+    res.status(201).json({
+      message: "Track uploaded successfully",
+      data: track,
+    });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
-export const uploadMultiple = async (req, res) => {
-  try {
-    const files = req.files;
-
-    if (!files || files.length === 0) {
-      return res.status(400).json({ message: "No files" });
-    }
-
-    const results = [];
-
-    for (let file of files) {
-      const uploaded = await uploadFile(
-        file.buffer,
-        file.originalname,
-        "uploads/multiple"
-      );
-      results.push(uploaded);
-    }
-
-    res.json({ message: "Files uploaded", data: results });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 export const updateTrack = (req, res) => {
   res.send("UPDATE TRACK");
