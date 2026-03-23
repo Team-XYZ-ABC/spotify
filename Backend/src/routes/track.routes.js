@@ -9,12 +9,11 @@ import {
   getTrackRecommendations,
   updateTrack,
   deleteTrack,
-  uploadSingle,
-  uploadImage,
-  uploadTrack,
-  uploadMultiple
+  uploadTrack
 } from "../controllers/track.controller.js";
 import upload from "../middlewares/multer.js";
+import isAuthenticated from "../middlewares/auth.middleware.js";
+import authRole from "../middlewares/authRole.middleware.js";
 
 const trackRouter = Router();
 
@@ -32,13 +31,7 @@ trackRouter.get("/:trackId/credits", getTrackCredits);
 
 trackRouter.get("/:trackId/recommendations", getTrackRecommendations);
 
-trackRouter.post("/artist/upload/single",upload.single("file"), uploadSingle);
-
-trackRouter.post("/artist/upload/image",upload.single("file"), uploadImage);
-
-trackRouter.post("/artist/upload/track",upload.single("file"), uploadTrack);
-
-trackRouter.post("/artist/upload/multiple",upload.array("files"), uploadMultiple);
+trackRouter.post("/artist/upload/track", isAuthenticated, authRole(["artist"]),  upload.single("file"), uploadTrack);
 
 
 trackRouter.patch("/artist/:trackId", updateTrack);
