@@ -48,7 +48,7 @@ const trackSchema = new mongoose.Schema(
             }
         ],
 
-        language: {
+        lang: {
             type: String
         },
 
