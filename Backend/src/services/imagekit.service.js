@@ -6,7 +6,7 @@ export const uploadSong = async(buffer , fileName , folder="")=>{
     const result = await imagekit.files.upload({
         file: await toFile(buffer , fileName),
         fileName: fileName,
-        folder: folder
+        filePath: `${folder}/${fileName}`
     })
 return result
 }
