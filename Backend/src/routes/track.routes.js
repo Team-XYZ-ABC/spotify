@@ -34,8 +34,8 @@ trackRouter.get("/:trackId/recommendations", getTrackRecommendations);
 trackRouter.post("/artist/upload/track", isAuthenticated, authRole(["artist"]),  upload.single("file"), uploadTrack);
 
 
-trackRouter.patch("/artist/:trackId", updateTrack);
+trackRouter.patch("/artist/:trackId", isAuthenticated, authRole(["artist"]),  updateTrack);
 
-trackRouter.delete("/artist/:trackId", deleteTrack);
+trackRouter.delete("/artist/:trackId", isAuthenticated , authRole(["artist"]),  deleteTrack);
 
 export default trackRouter;
