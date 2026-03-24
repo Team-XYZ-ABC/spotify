@@ -14,7 +14,7 @@ const isAuthenticated = async (req, res, next) => {
 
         const decoded = jwt.verify(token, CONFIG.JWT_SECRET_KEY)
 
-        req.user = decoded.user
+        req.user = decoded
 
         next()
 
