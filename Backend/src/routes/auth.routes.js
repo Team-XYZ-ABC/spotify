@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { GetCurrentUser, loginUser, logoutUser, registerUser } from "../controllers/auth.controller.js";
+import { getCurrentUser, loginUser, logoutUser, registerUser } from "../controllers/auth.controller.js";
 
 const authRouter = Router()
 
-authRouter.post('/users/register', registerUser)
-authRouter.post('/users/login', loginUser)
-authRouter.post('/users/logout', logoutUser)
-authRouter.get('/users/profile', GetCurrentUser)
+authRouter.post('/register', registerUser)
+authRouter.post('/login', loginUser)
+authRouter.post('/logout', logoutUser)
+authRouter.get('/me', getCurrentUser)
 
 export default authRouter

@@ -1,5 +1,8 @@
 import CONFIG from '../configs/env.config.js'
 import jwt from 'jsonwebtoken'
+import {
+    jwtVerify
+} from '../services/jwt.service.js'
 
 const isAuthenticated = async (req, res, next) => {
     try {
@@ -12,8 +15,7 @@ const isAuthenticated = async (req, res, next) => {
             })
         }
 
-        const decoded = jwt.verify(token, CONFIG.JWT_SECRET_KEY)
-
+        const decoded = jwtVerify(token, CONFIG.JWT_SECRET_KEY)
         req.user = decoded
 
         next()
