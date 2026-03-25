@@ -2,11 +2,42 @@ import { uploadSong } from "../services/imagekit.service.js";
 import TrackModel from "../models/track.model.js";
 import { generateISRC } from "../utils.js";
 import imagekit from "../configs/imagekit.config.js";
+import ArtistModel from "../models/artist.model.js";
+import albumModel from "../models/album.model.js";
 
 
 
-export const getTrack = (req, res) => {
-  res.send("GET TRACK DETAILS");
+export const getTrack = async (req, res) => {
+  try {
+    const { trackId } = req.params;
+
+    if (!trackId) {
+      return res.status(400).json({
+        message: "Track ID is required",
+      });
+    }
+
+    const track = await TrackModel.findById(trackId)
+      .populate("primaryArtist", "name")
+      .populate("artists", "name")
+      .populate("album", "title");
+
+    if (!track) {
+      return res.status(404).json({
+        message: "Track not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Track fetched successfully",
+      data: track,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 export const streamTrack = (req, res) => {
