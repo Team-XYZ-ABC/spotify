@@ -7,12 +7,18 @@ import {
   getTrackLyrics,
   getTrackCredits,
   getTrackRecommendations,
-  uploadTrack,
   updateTrack,
-  deleteTrack
+  deleteTrack,
+  uploadTrack
 } from "../controllers/track.controller.js";
+<<<<<<< HEAD
 import authRole from "../middlewares/authRole.middleware.js";
 import isAuthenticated from "../middlewares/auth.middleware.js";
+=======
+import upload from "../middlewares/multer.js";
+import isAuthenticated from "../middlewares/auth.middleware.js";
+import authRole from "../middlewares/authRole.middleware.js";
+>>>>>>> 967bb96ae190ea6b05c30c1ac3d933d948559c81
 
 const trackRouter = Router();
 
@@ -30,10 +36,11 @@ trackRouter.get("/:trackId/credits", getTrackCredits);
 
 trackRouter.get("/:trackId/recommendations", getTrackRecommendations);
 
-trackRouter.post("/artist/upload",isAuthenticated, authRole(['artist']), uploadTrack);
+trackRouter.post("/artist/upload/track", isAuthenticated, authRole(["artist"]),  upload.single("file"), uploadTrack);
 
-trackRouter.patch("/artist/:trackId", updateTrack);
 
-trackRouter.delete("/artist/:trackId", deleteTrack);
+trackRouter.patch("/artist/:trackId", isAuthenticated, authRole(["artist"]),  updateTrack);
+
+trackRouter.delete("/artist/:trackId", isAuthenticated , authRole(["artist"]),  deleteTrack);
 
 export default trackRouter;
