@@ -39,7 +39,7 @@ const trackSchema = new mongoose.Schema(
 
         album: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Albums"
+            ref: "Album"
         },
 
         genres: [
