@@ -3,6 +3,7 @@ import CONFIG from "../configs/env.config.js"
 import bcrypt from 'bcrypt'
 import { jwtSign, jwtVerify } from "../services/jwt.service.js"
 import mongoose from "mongoose"
+import ArtistModel from "../models/artist.model.js"
 
 export const registerUser = async (req, res) => {
     const session = await mongoose.startSession();
