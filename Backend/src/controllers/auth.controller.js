@@ -221,6 +221,7 @@ export const getCurrentUser = async (req, res) => {
         }
 
         res.status(200).json({
+            message: "logged in user fetched successfully",
             user: {
                 id: user._id,
                 username: user.username,

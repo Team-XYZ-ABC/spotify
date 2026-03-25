@@ -21,6 +21,7 @@ export const getProfile = async(req, res)=>{
         if (user.role === "artist") {
             const artist = await ArtistModel.findOne({ user: userId });
             return res.status(200).json({
+                message: "logged in user profile fetched successfully",
                 success: true,
                 user,
                 artist
@@ -39,24 +40,7 @@ export const updateProfile = async (req, res) => {
 
         const { displayName, bio } = req.body;
 
-        const updateData = {};
-
-        if (displayName) updateData.displayName = displayName;
-        if (bio) updateData.bio = bio;
-
-        if (Object.keys(updateData).length === 0) {
-            return res.status(400).json({
-                message: "No data provided to update"
-            });
-        }
-
-        const user = await UserModel.findByIdAndUpdate(
-            userId,
-            updateData,
-            { new: true }
-        )
-            .select("-password -refreshToken -__v")
-            .lean();
+        const user = await UserModel.findById(userId);
 
         if (!user) {
             return res.status(404).json({
@@ -64,9 +48,28 @@ export const updateProfile = async (req, res) => {
             });
         }
 
+        if (!displayName && !bio) {
+            return res.status(400).json({
+                message: "No data provided to update"
+            });
+        }
+
+        if (displayName) user.displayName = displayName;
+        if (bio) user.bio = bio;
+
+        await user.save();
+
+        const safeUser = {
+            id: user._id,
+            displayName: user.displayName,
+            bio: user.bio,
+            email: user.email,
+            username: user.username
+        };
+
         res.status(200).json({
             message: "Profile updated successfully",
-            user
+            user: safeUser
         });
 
     } catch (error) {
@@ -91,10 +94,23 @@ export const getOtherUserProfile = async (req, res) => {
             });
         }
 
-        res.status(200).json({
-            message: "Profile fetched successfully",
-            user
-        });
+        if (user.role === "listener") {
+            return res.status(200).json({
+                message: "user profile fetched successfully",
+                success: true,
+                user
+            });
+        }
+
+        if (user.role === "artist") {
+            const artist = await ArtistModel.findOne({ user: id });
+            return res.status(200).json({
+                message: "user profile fetched successfully",
+                success: true,
+                user,
+                artist
+            });
+        }
 
     } catch (error) {
         res.status(500).json({

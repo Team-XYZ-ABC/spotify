@@ -120,7 +120,6 @@ const userSchema = new mongoose.Schema(
                 default: "high"
             }
         }
-
     },
     {
         timestamps: true
