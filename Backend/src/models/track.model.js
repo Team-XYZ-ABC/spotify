@@ -48,7 +48,7 @@ const trackSchema = new mongoose.Schema(
             }
         ],
 
-        language: {
+        lang: {
             type: String
         },
 
@@ -91,6 +91,10 @@ const trackSchema = new mongoose.Schema(
         isPublished: {
             type: Boolean,
             default: true
+        },
+        audioFileId: {
+            type: String,
+            required: true
         }
 
     },

@@ -1,4 +1,3 @@
-import express from 'express';
 import app from './src/app.js';
 import connectDB from './src/configs/db.config.js';
 import CONFIG from './src/configs/env.config.js';
