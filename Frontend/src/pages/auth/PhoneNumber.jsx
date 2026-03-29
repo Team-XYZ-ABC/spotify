@@ -11,7 +11,7 @@ const PhoneNumber = () => {
 
     const handleContinue = () => {
         if (!isValid) return;
-        navigate("/verifyOtp");
+        navigate("/register/verify-otp");
     };
 
     return (
