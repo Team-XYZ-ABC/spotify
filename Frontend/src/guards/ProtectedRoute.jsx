@@ -1,9 +1,15 @@
 import { Navigate } from "react-router";
+import { useSelector } from "react-redux";
+import Loader from "../components/ui/Loader";
 
 const ProtectedRoute = ({ children }) => {
-    const token = localStorage.getItem("token");
+    const { user, loading } = useSelector((state) => state.auth);
 
-    if (!token) {
+    if (loading) {
+        return <Loader/>;
+    }
+
+    if (!user) {
         return <Navigate to="/login" replace />;
     }
 
