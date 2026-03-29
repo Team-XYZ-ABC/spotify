@@ -1,20 +1,31 @@
 import { useEffect, useState } from "react";
 import TermsandPolicy from "../../components/ui/TermsandPolicy";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useSearchParams } from "react-router";
+import useAuth from "../../hooks/useAuth";
 
 const RegisterStep1 = () => {
+    const navigate = useNavigate()
+    const [searchParams] = useSearchParams();
+    const email = searchParams.get("email");
+    useEffect(() => {
+        document.title = "Create Account - Spotify";
+        console.log(location)
+        email ? null : navigate('/register')
+    }, []);
+
+
     const [form, setForm] = useState({
+        email: email,
         displayName: "",
-        userName: "",
+        username: "",
         password: "",
         role: "listener",
     });
 
+    const { registerUser, loading, error } = useAuth();
     const [strength, setStrength] = useState("");
 
-    useEffect(() => {
-        document.title = "Create Account - Spotify";
-    }, []);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,12 +38,6 @@ const RegisterStep1 = () => {
                 setStrength("Strong");
             } else setStrength("Medium");
         }
-    };
-
-    const handleSubmit = () => {
-        const { displayName, userName, password } = form;
-
-        console.log("Data:", form);
     };
 
     return (
@@ -69,8 +74,8 @@ const RegisterStep1 = () => {
                     <label className="text-sm font-semibold">Username</label>
                     <input
                         type="text"
-                        name="userName"
-                        value={form.userName}
+                        name="username"
+                        value={form.username}
                         onChange={handleChange}
                         placeholder="username"
                         className="bg-transparent border border-gray-500 p-3 rounded-md focus:outline-none focus:border-white"
@@ -133,14 +138,17 @@ const RegisterStep1 = () => {
                         </button>
                     </div>
                 </div>
-                <Link to={"/"}>
+
+                {error && (
+                    <p className="text-red-500 text-sm">{error}</p>
+                )}
+
                     <button
-                        onClick={handleSubmit}
+                        onClick={() => registerUser(form)}
                         className="bg-green-500 w-full cursor-pointer text-black font-bold py-3 rounded-full active:scale-95 transition"
                     >
                         Create Account
                     </button>
-                </Link>
             </div>
             <div className="flex flex-col gap-10">
                 <TermsandPolicy />
