@@ -8,7 +8,7 @@ import {
     RegisterStep1,
     PhoneNumber,
     VerifyOtp
-} from "./LazyImports";
+} from "./lazyImports";
 
 export const authRoutes = [
     {

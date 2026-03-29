@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 
-const UserProfile = () => {
+const UserMenuCard = ({setShowProfile}) => {
   return (
     <div className="absolute right-0 sm:right-10 top-14 w-full sm:w-80 bg-[#121212] text-white rounded-lg shadow-lg p-2 z-50">
       
@@ -38,7 +38,7 @@ const UserProfile = () => {
 
 const MenuItem = ({ icon, text, external, path }) => {
   return (
-    <Link to={path} className={`${text === 'Log out' ? "hover:bg-red-500/30" : "hover:bg-[#2a2a2a]"} flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition`}>
+    <Link to={path} onClick={()=>{setShowProfile(false)}} className={`${text === 'Log out' ? "hover:bg-red-500/30" : "hover:bg-[#2a2a2a]"} flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition`}>
       
       <div className="flex items-center gap-3">
         <i className={`${icon} text-lg`}></i>
@@ -52,4 +52,4 @@ const MenuItem = ({ icon, text, external, path }) => {
   );
 };
 
-export default UserProfile;
+export default UserMenuCard;

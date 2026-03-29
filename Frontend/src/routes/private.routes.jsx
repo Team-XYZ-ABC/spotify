@@ -1,5 +1,5 @@
-import { UserProfile } from "./LazyImports";
 import ProtectedRoute from "../guards/ProtectedRoute";
+import { UserProfile } from "./lazyImports";
 
 export const privateRoutes = [
     {

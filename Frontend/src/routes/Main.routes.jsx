@@ -2,13 +2,12 @@ import { createBrowserRouter } from "react-router";
 import Register from "../pages/auth/Register";
 import Login from "../pages/auth/Login";
 import Home from "../pages/home/Home";
-import Feed from "../components/common/Feed";
 import App from "../App";
 import PhoneNumber from "../pages/auth/PhoneNumber";
 import VerifyOtp from "../pages/auth/VerifyOtp";
 import RegisterStep1 from "../pages/auth/RegisterStep1";
-import UserProfile from "../pages/home/UserProfile";
 import NotFound from "../components/common/NotFound";
+import UserMenuCard from "../pages/home/UserMenuCard";
 
 export const Router = createBrowserRouter([
     {
@@ -41,7 +40,7 @@ export const Router = createBrowserRouter([
             },
             {
                 path: "/profileCard",
-                element: <UserProfile />,
+                element: <UserMenuCard />,
             },
             {
                 path: '*',
