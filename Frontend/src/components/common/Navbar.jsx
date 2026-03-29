@@ -3,79 +3,90 @@ import { Link } from "react-router";
 import UserMenuCard from "../../pages/home/UserMenuCard";
 
 const Navbar = ({ toggleSidebar }) => {
-  const [isLogin, setIsLogin] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const handleSearch = (e) => {
+    if (e.key === "Enter") {
+      console.log("Search:", search);
+    }
+  };
 
   return (
-    <div className="w-full relative h-16 flex items-center justify-between px-4 text-white">
-      <Link to="/" className="flex items-center gap-2">
-        <img
-          src="/img/spotify_logo_white.png"
-          alt="logo"
-          className="h-10 w-10"
-        />
-      </Link>
-      <div className="hidden md:flex items-center bg-[#121212] px-4 py-3 rounded-full w-[40%]">
-        <input
-          type="text"
-          placeholder="What do you want to play?"
-          className="bg-transparent outline-none w-full text-sm"
-        />
+    <div className="w-full h-16 flex items-center justify-between px-3 md:px-6 text-white gap-3">
+
+      <div className="flex items-center shrink-0">
+        <Link to="/">
+          <img src="/img/spotify_logo_white.png" alt="logo" className="h-8 w-8" />
+        </Link>
       </div>
-      {isLogin
-        ? (
-          <div className="flex items-center">
-            <div className="relative group h-12 w-12 hidden items-center justify-center cursor-pointer md:flex rounded-full bg-zinc-900 transition-all ease-in-out duration-200 hover:bg-zinc-800">
-              <div
-                onClick={() => setShowProfile(!showProfile)}
-                className="profile bg-blue-700 text-white font-semibold text-2xl h-10 w-10 flex items-center justify-center rounded-full"
-              >
-                S
-              </div>
-              <span
-                className={`absolute ${
-                  showProfile ? "hidden" : "group-hover:flex"
-                } hidden text-xs -bottom-8 w-27 rounded -left-14 z-9 px-2 py-1 bg-zinc-800`}
-              >
-                Suryakumar Sirvi
-              </span>
-            </div>
 
-            {showProfile && <UserMenuCard setShowProfile={setShowProfile}/>}
+      <div className="hidden md:flex items-center justify-center flex-1 min-w-0">
+        <div className="flex items-center gap-3 bg-[#121212] px-3 py-2 rounded-full w-full max-w-130">
 
-            <button
-              onClick={() => setShowProfile(!showProfile)}
-              className="md:hidden text-white text-3xl"
-            >
-              <i className="ri-settings-3-line"></i>
-            </button>
+          <div className="shrink-0 bg-[#1f1f1f] h-10 cursor-pointer w-10 flex items-center justify-center rounded-full">
+            <i className="ri-home-5-line text-xl"></i>
           </div>
-        )
-        : (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4">
-              <Link
-                to="/register"
-                className="text-sm font-semibold text-gray-300 hover:text-white"
-              >
-                Sign up
-              </Link>
 
-              <Link
-                to="/login"
-                className="bg-white text-black px-5 py-2 rounded-full text-sm font-bold hover:scale-105 transition"
-              >
-                Log in
-              </Link>
-            </div>
-            <button
-              onClick={toggleSidebar}
-              className="md:hidden text-white text-xl"
-            >
-              ☰
-            </button>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <i className="ri-search-line text-gray-400 text-lg shrink-0"></i>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                console.log(e.target.value);
+              }}
+              onKeyDown={handleSearch}
+              placeholder="What do you want to play?"
+              className="bg-transparent outline-none w-full text-sm placeholder-gray-400 truncate"
+            />
           </div>
-        )}
+
+          <div className="h-5 w-px bg-gray-600 shrink-0"></div>
+
+          <div className="shrink-0">
+            <i className="ri-stack-line text-xl cursor-pointer hover:text-white text-gray-300 transition-colors"></i>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
+
+        <div className="hidden lg:flex items-center gap-4">
+          <button className="bg-white cursor-pointer text-black px-4 py-1.5 rounded-full text-sm font-semibold transition-transform hover:scale-[1.03]">
+            Explore Premium
+          </button>
+
+          <button className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
+            <i className="ri-download-line"></i>
+            Install App
+          </button>
+
+          <i className="ri-notification-3-line text-xl cursor-pointer text-gray-300 hover:text-white transition-colors"></i>
+          <i className="ri-group-line text-xl cursor-pointer text-gray-300 hover:text-white transition-colors"></i>
+        </div>
+
+        <div className="relative">
+          <div
+            onClick={() => setShowProfile(!showProfile)}
+            className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center rounded-full bg-orange-500 font-semibold cursor-pointer text-sm md:text-base"
+          >
+            Z
+          </div>
+
+          {showProfile && (
+            <UserMenuCard setShowProfile={setShowProfile} />
+          )}
+        </div>
+
+        <button
+          onClick={toggleSidebar}
+          className="md:hidden text-2xl"
+        >
+          ☰
+        </button>
+      </div>
     </div>
   );
 };

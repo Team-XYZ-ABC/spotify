@@ -154,7 +154,7 @@ const ProfileHeader = ({ name, profileImg, fileInputRef, onUpload }) => (
 
       <div>
         <p className="text-sm text-gray-300">Profile</p>
-        <h1 className="text-5xl font-bold text-white">{name}</h1>
+        <h1 className="md:text-5xl text-2xl font-bold text-white">{name}</h1>
       </div>
     </div>
   </div>
