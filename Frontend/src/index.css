@@ -2,17 +2,17 @@
 
 @font-face {
   font-family: SpotifyRegular;
-  src: url(../public/fonts/SpotifyRegular.woff2) format("woff2");
+  src: url(/fonts/SpotifyRegular.woff2) format("woff2");
 }
 
 @font-face {
   font-family: SpotifyBold;
-  src: url(../public/fonts/SpotifyBold.woff2) format("woff2");
+  src: url(/fonts/SpotifyBold.woff2) format("woff2");
 }
 
 @font-face {
   font-family: SpotifyExtraBold;
-  src: url(../public/fonts/SpotifyExtraBold.woff2) format("woff2");
+  src: url(/fonts/SpotifyExtraBold.woff2) format("woff2");
 }
 
 body {

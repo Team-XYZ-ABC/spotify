@@ -5,7 +5,7 @@ const Sidebar = ({ isOpen }) => {
     <div
       className={`
         bg-[#121212] text-white flex flex-col rounded-lg
-        fixed md:static top-0 left-0 h-screen md:h-auto z-50
+        fixed md:static top-0 left-0 h-screen md:h-auto z-8
         transition-transform duration-300
         
         w-[80%] sm:w-[60%] md:w-[26%] lg:w-[20%]

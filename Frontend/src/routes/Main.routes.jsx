@@ -7,6 +7,8 @@ import App from "../App";
 import PhoneNumber from "../pages/auth/PhoneNumber";
 import VerifyOtp from "../pages/auth/VerifyOtp";
 import RegisterStep1 from "../pages/auth/RegisterStep1";
+import UserProfile from "../pages/home/UserProfile";
+import NotFound from "../components/common/NotFound";
 
 export const Router = createBrowserRouter([
     {
@@ -22,8 +24,8 @@ export const Router = createBrowserRouter([
                 element: <Register />,
             },
             {
-                path: '/registerstep1',
-                element: <RegisterStep1/>
+                path: "/registerstep1",
+                element: <RegisterStep1 />,
             },
             {
                 path: "/login",
@@ -37,6 +39,14 @@ export const Router = createBrowserRouter([
                 path: "/verifyOtp",
                 element: <VerifyOtp />,
             },
+            {
+                path: "/profileCard",
+                element: <UserProfile />,
+            },
+            {
+                path: '*',
+                element: <NotFound/>
+            }
         ],
     },
 ]);

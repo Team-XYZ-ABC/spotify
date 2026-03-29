@@ -8,7 +8,7 @@ const Register = () => {
   }, []);
 
   return (
-    <div className="min-h-screen p-14 sm:p-26 w-full bg-[#121212] flex flex-col gap-18 justify-between items-center text-white px-4">
+    <div className="min-h-screen p-14 mt-24 sm:p-26 w-full bg-[#121212] flex flex-col gap-18 justify-between items-center text-white px-4">
       <div className="w-80 flex flex-col gap-4">
         <div className="flex flex-col items-center text-center gap-4">
           <div className="h-10 w-10">
@@ -36,13 +36,13 @@ const Register = () => {
         </div>
 
         <Link
-          to={"/phoneRegister"}
+          to={"/register/phoneRegister"}
           className="text-green-500 underline text-sm cursor-pointer hover:underline"
         >
           Use phone number instead.
         </Link>
 
-        <Link to={'/registerstep1'}>
+        <Link to={'/register/step-1'}>
           <button className="bg-green-500 w-full cursor-pointer text-black font-bold py-3 rounded-full active:scale-95 transition">
             Next
           </button>
