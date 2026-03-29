@@ -5,6 +5,7 @@ import Sidebar from "../components/common/Sidebar";
 
 const MainLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
         <div className="flex flex-col p-3 gap-4 h-screen bg-zinc-950">
@@ -18,7 +19,11 @@ const MainLayout = () => {
                     />
                 )}
 
-                <Sidebar isOpen={isSidebarOpen} />
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    isCollapsed={isCollapsed}
+                    toggleCollapse={() => setIsCollapsed((prev) => !prev)}
+                />
 
                 <Outlet />
             </div>

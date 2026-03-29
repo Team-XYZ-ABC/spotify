@@ -4,7 +4,7 @@ import MainLayout from "../layouts/MainLayout";
 import { publicRoutes } from "./public.routes";
 import { authRoutes } from "./auth.routes";
 import { privateRoutes } from "./private.routes";
-import { NotFound } from "./LazyImports";
+import { NotFound } from "./lazyImports";
 
 import { Suspense } from "react";
 import Loader from "../components/ui/Loader";

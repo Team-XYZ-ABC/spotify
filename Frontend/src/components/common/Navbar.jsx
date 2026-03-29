@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router";
-import UserProfile from "../../pages/home/UserProfile";
+import UserMenuCard from "../../pages/home/UserMenuCard";
 
 const Navbar = ({ toggleSidebar }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -41,7 +41,7 @@ const Navbar = ({ toggleSidebar }) => {
               </span>
             </div>
 
-            {showProfile && <UserProfile />}
+            {showProfile && <UserMenuCard setShowProfile={setShowProfile}/>}
 
             <button
               onClick={() => setShowProfile(!showProfile)}
