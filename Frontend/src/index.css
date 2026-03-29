@@ -15,12 +15,30 @@
   src: url(/fonts/SpotifyExtraBold.woff2) format("woff2");
 }
 
+@font-face {
+  font-family: SpotifyLight;
+  src: url(/fonts/SpotifyMixUITitleVariable-08bab3354d40f74e5177917b5ae80894.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: SpotifyMix;
+  src: url(/fonts/SpotifyMixUI-Bold-09c45a3a0ce9d2971e62cb26e97760fb.woff2) format("woff2");
+}
+
 body {
   font-family: SpotifyRegular, sans-serif;
 }
 
 .bg-primary{
   background-color: #111111;
+}
+
+.font-mix{
+  font-family: SpotifyMix;
+}
+
+.font-light{
+  font-family: SpotifyLight, sans-serif;
 }
 
 .font-regular {
