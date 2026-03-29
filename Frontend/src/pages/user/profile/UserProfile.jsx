@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import Footer from "../../../components/common/Footer";
+import EditProfileModal from "../../../components/ui/EditProfileModal";
+import {Link } from 'react-router'
+const SCROLL_THRESHOLD = 120;
 
 const tracks = [
   {
@@ -8,7 +11,7 @@ const tracks = [
     artist: "Shashwat Sachdev, Jasmine Sandlas",
     album: "Dhurandhar",
     duration: "3:44",
-    img: "/img/song1.jpg",
+    img: "https://i.pinimg.com/avif/1200x/e2/ef/07/e2ef0764ce6cd12b9f754215c656e63f.avf",
   },
   {
     id: 2,
@@ -16,7 +19,7 @@ const tracks = [
     artist: "Diljit Dosanjh",
     album: "Dhurandhar",
     duration: "3:02",
-    img: "/img/song2.jpg",
+    img: "https://i.pinimg.com/736x/d0/3b/99/d03b99c26428a643b1c6ec637f6f81fd.jpg",
   },
   {
     id: 3,
@@ -24,17 +27,21 @@ const tracks = [
     artist: "AP Dhillon",
     album: "Thinking of You",
     duration: "3:00",
-    img: "/img/song3.jpg",
+    img: "https://i.pinimg.com/736x/82/86/d0/8286d03a47cab27c4733495fd4cc37c7.jpg",
   },
 ];
 
+
 const UserProfile = () => {
-  const fileInputRef = useRef(null);
   const scrollRef = useRef(null);
-  const [openMenu, setOpenMenu] = useState(null);
   const menuRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [profileImg, setProfileImg] = useState(null);
+  const [name, setName] = useState("Zeneration Media");
+  const [openMenu, setOpenMenu] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
+
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -44,180 +51,206 @@ const UserProfile = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowSticky(scrollRef.current.scrollTop > SCROLL_THRESHOLD);
+    };
+
+    const el = scrollRef.current;
+    el.addEventListener("scroll", handleScroll);
+
+    return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImg(imageUrl);
+      setProfileImg(URL.createObjectURL(file));
     }
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (scrollRef.current.scrollTop > 120) {
-        setShowSticky(true);
-      } else {
-        setShowSticky(false);
-      }
-    };
-
-    const container = scrollRef.current;
-    container.addEventListener("scroll", handleScroll);
-
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
+  const handleEditOpen = () => {
+    setIsEditOpen(true);
+    setOpenMenu(null);
+  };
 
   return (
     <div
       ref={scrollRef}
-      className="flex-1 h-[calc(100vh-86px)] overflow-y-auto bg-zinc-900 rounded-lg flex flex-col relative"
+      className="flex-1 h-[calc(100vh-86px)] overflow-y-auto bg-zinc-900 rounded-lg flex flex-col"
     >
-      <div
-        className={`sticky top-0 z-40 bg-black/80 backdrop-blur-md px-6 py-3 transition-all ${
-          showSticky ? "opacity-100" : "opacity-0 hidden"
-        }`}
-      >
-        <h2 className="text-white font-semibold text-lg">
-          Zeneration Media
-        </h2>
-      </div>
+      <EditProfileModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        name={name}
+        setName={setName}
+        profileImg={profileImg}
+        setProfileImg={setProfileImg}
+      />
 
-      <div className="bg-linear-to-b from-[#3a3a3a] to-black px-4 sm:px-6 md:px-10 py-8 sm:py-10">
-        <div className="flex items-center gap-4 sm:gap-6">
-          <div
-            onClick={() => fileInputRef.current.click()}
-            className="relative group w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 bg-[#1f1f1f] rounded-full flex items-center justify-center shadow-lg cursor-pointer overflow-hidden"
-          >
-            {profileImg
-              ? (
-                <img
-                  src={profileImg}
-                  alt="profile"
-                  className="w-full h-full object-cover"
-                />
-              )
-              : (
-                <i className="ri-user-line text-4xl sm:text-5xl text-gray-400">
-                </i>
-              )}
+      {showSticky && (
+        <StickyHeader name={name} />
+      )}
 
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-              <i className="ri-pencil-line text-xl text-white sm:text-2xl"></i>
-            </div>
-          </div>
-
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-
-          <div>
-            <p className="text-xs sm:text-sm text-gray-300">Profile</p>
-            <h1 className="text-2xl text-white sm:text-4xl md:text-7xl font-bold leading-tight">
-              Zeneration Media
-            </h1>
-          </div>
-        </div>
-      </div>
+      <ProfileHeader
+        name={name}
+        profileImg={profileImg}
+        fileInputRef={fileInputRef}
+        onUpload={handleImageUpload}
+      />
 
       <div className="flex-1 px-4 text-white bg-black sm:px-6 md:px-10 py-6 sm:py-8">
-        <div
-          className="flex items-center justify-end gap-4 mb-4 relative"
-          ref={menuRef}
-        >
-          <div className="relative">
-            <button
-              onClick={() =>
-                setOpenMenu(openMenu === "settings" ? null : "settings")}
-              className="w-10 cursor-pointer h-10 flex items-center justify-center rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] transition"
-            >
-              <i className="ri-settings-3-line text-lg"></i>
-            </button>
-
-            {openMenu === "settings" && (
-              <div className="absolute right-0 mt-2 w-48 bg-[#1f1f1f] rounded-md shadow-lg p-2 z-50">
-                <button className="w-full cursor-pointer text-left px-3 py-2 hover:bg-[#2a2a2a] rounded">
-                  Edit Profile
-                </button>
-                <button className="w-full cursor-pointer text-left px-3 py-2 hover:bg-[#2a2a2a] rounded">
-                  Account Settings
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => setOpenMenu(openMenu === "more" ? null : "more")}
-              className="w-10 h-10 flex cursor-pointer items-center justify-center rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] transition"
-            >
-              <i className="ri-more-2-fill text-lg"></i>
-            </button>
-
-            {openMenu === "more" && (
-              <div className="absolute right-0 mt-2 w-48 bg-[#1f1f1f] rounded-md shadow-lg p-2 z-50">
-                <button className="w-full cursor-pointer text-left px-3 py-2 hover:bg-[#2a2a2a] rounded">
-                  Share Profile
-                </button>
-                <button className="w-full cursor-pointer text-left px-3 py-2 hover:bg-[#2a2a2a] rounded text-red-400">
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        <h2 className="text-lg sm:text-xl font-bold mb-1">
-          Top tracks this month
-        </h2>
-        <p className="text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6">
-          Only visible to you
-        </p>
-
-        <div className="space-y-2 sm:space-y-3">
-          {tracks.map((track) => (
-            <div
-              key={track.id}
-              className="grid grid-cols-12 items-center gap-2 sm:gap-4 text-xs sm:text-sm hover:bg-[#1a1a1a] p-2 sm:p-3 rounded transition cursor-pointer"
-            >
-              <span className="col-span-1 text-gray-400">
-                {track.id}
-              </span>
-
-              <div className="col-span-7 sm:col-span-6 flex items-center gap-2 sm:gap-3 min-w-0">
-                <img
-                  src={track.img}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover"
-                  alt=""
-                />
-                <div className="min-w-0">
-                  <p className="truncate">{track.title}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-400 truncate">
-                    {track.artist}
-                  </p>
-                </div>
-              </div>
-
-              <span className="hidden sm:block col-span-3 text-gray-400 truncate">
-                {track.album}
-              </span>
-
-              <span className="col-span-4 sm:col-span-2 text-gray-400 text-right">
-                {track.duration}
-              </span>
-            </div>
-          ))}
-        </div>
+        
+        <ProfileMenu
+          menuRef={menuRef}
+          openMenu={openMenu}
+          setOpenMenu={setOpenMenu}
+          onEdit={handleEditOpen}
+        />
+        <TrackList tracks={tracks} />
       </div>
 
       <Footer />
     </div>
   );
 };
+
+
+const StickyHeader = ({ name }) => (
+  <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md px-6 py-3">
+    <h2 className="text-white font-semibold text-lg">{name}</h2>
+  </div>
+);
+
+const ProfileHeader = ({ name, profileImg, fileInputRef, onUpload }) => (
+  <div className="bg-linear-to-b from-[#3a3a3a] to-black px-6 py-10">
+    <div className="flex items-center gap-6">
+      
+      <div
+        onClick={() => fileInputRef.current.click()}
+        className="relative group w-32 h-32 rounded-full bg-[#1f1f1f] flex items-center justify-center cursor-pointer overflow-hidden"
+      >
+        {profileImg ? (
+          <img src={profileImg} className="w-full h-full object-cover" />
+        ) : (
+          <i className="ri-user-line text-5xl text-gray-400"></i>
+        )}
+
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex justify-center items-center">
+          <i className="ri-pencil-line text-white text-xl"></i>
+        </div>
+      </div>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={onUpload}
+        className="hidden"
+      />
+
+      <div>
+        <p className="text-sm text-gray-300">Profile</p>
+        <h1 className="text-5xl font-bold text-white">{name}</h1>
+      </div>
+    </div>
+  </div>
+);
+
+const ProfileMenu = ({ menuRef, openMenu, setOpenMenu, onEdit }) => (
+  <div className="flex justify-end gap-4 mb-4" ref={menuRef}>
+    
+    <div className="relative">
+      <IconButton
+        icon="ri-settings-3-line"
+        onClick={() =>
+          setOpenMenu(openMenu === "settings" ? null : "settings")
+        }
+      />
+
+      {openMenu === "settings" && (
+        <Dropdown>
+          <DropdownItem onClick={onEdit}>Edit Profile</DropdownItem>
+          <Link to={'/account'}><DropdownItem>Account Settings</DropdownItem></Link>
+        </Dropdown>
+      )}
+    </div>
+
+    <div className="relative">
+      <IconButton
+        icon="ri-more-2-fill"
+        onClick={() =>
+          setOpenMenu(openMenu === "more" ? null : "more")
+        }
+      />
+
+      {openMenu === "more" && (
+        <Dropdown>
+          <DropdownItem>Share Profile</DropdownItem>
+          <DropdownItem className="text-red-400">Logout</DropdownItem>
+        </Dropdown>
+      )}
+    </div>
+  </div>
+);
+
+const TrackList = ({ tracks }) => (
+  <>
+    <h2 className="text-xl font-bold mb-1">Top tracks this month</h2>
+    <p className="text-sm text-gray-400 mb-6">Only visible to you</p>
+
+    <div className="space-y-3">
+      {tracks.map((track) => (
+        <TrackItem key={track.id} track={track} />
+      ))}
+    </div>
+  </>
+);
+
+const TrackItem = ({ track }) => (
+  <div className="grid grid-cols-12 items-center hover:bg-[#1a1a1a] p-3 rounded">
+    <span className="col-span-1 text-gray-400">{track.id}</span>
+
+    <div className="col-span-6 flex gap-3">
+      <img src={track.img} className="w-10 h-10 rounded" />
+      <div>
+        <p>{track.title}</p>
+        <p className="text-xs text-gray-400">{track.artist}</p>
+      </div>
+    </div>
+
+    <span className="col-span-3 text-gray-400">{track.album}</span>
+    <span className="col-span-2 text-right text-gray-400">
+      {track.duration}
+    </span>
+  </div>
+);
+
+const IconButton = ({ icon, ...props }) => (
+  <button
+    {...props}
+    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] transition"
+  >
+    <i className={icon}></i>
+  </button>
+);
+
+const Dropdown = ({ children }) => (
+  <div className="absolute right-0 mt-2 w-48 bg-[#1f1f1f] rounded-md p-2 shadow-lg z-50">
+    {children}
+  </div>
+);
+
+const DropdownItem = ({ children, className = "", ...props }) => (
+  <button
+    {...props}
+    className={`w-full text-left px-3 py-2 hover:bg-[#2a2a2a] rounded ${className}`}
+  >
+    {children}
+  </button>
+);
 
 export default UserProfile;
