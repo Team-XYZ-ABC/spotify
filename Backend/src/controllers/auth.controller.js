@@ -5,6 +5,31 @@ import { jwtSign, jwtVerify } from "../services/jwt.service.js"
 import mongoose from "mongoose"
 import ArtistModel from "../models/artist.model.js"
 
+export const isEmailExist = async (req, res) => {
+    try {
+        let { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required"
+            });
+        }
+
+        email = email.toLowerCase().trim();
+
+        const exists = await UserModel.exists({ email });
+
+        return res.status(200).json({
+            exists: !!exists
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Server error"
+        });
+    }
+};
+
 export const registerUser = async (req, res) => {
     const session = await mongoose.startSession();
 
