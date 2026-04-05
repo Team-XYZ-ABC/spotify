@@ -8,12 +8,12 @@ const Feed = () => {
         {Array(5).fill().map((_, i) => (
           <div
             key={i}
-            className="h-70 p-2 cursor-pointer flex flex-col gap-4 w-full rounded-md transition"
+            className=" p-2 cursor-pointer flex flex-col gap-4 w-full rounded-md transition"
           >
             <h1 className="text-xl">Genre Category</h1>
             <div className="flex gap-4 no-scrollbar overflow-x-auto">
               {Array(8).fill().map((_, i) => (
-              <div key={i} className="h-58 w-54 shrink-0 bg-zinc-950 rounded-lg">
+              <div key={i} className="h-56 w-54 shrink-0 bg-zinc-950 rounded-lg">
               </div>
             ))}
             </div>
