@@ -7,6 +7,8 @@ import MainLayout from "../layouts/MainLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import AuthRoute from "../guards/AuthRoute";
 import Loader from "../components/ui/Loader";
+import Analytics from "../pages/user/Artist/Analytics";
+import DashboardLayout from "../layouts/DashboardLayout";
 
 // --- Lazy Loads ---
 const Home = lazy(() => import("../pages/home/Home"));
@@ -21,7 +23,7 @@ const NotFound = lazy(() => import("../components/common/NotFound"));
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <App />, 
+        element: <App />,
         children: [
             {
                 element: (
@@ -74,6 +76,18 @@ export const router = createBrowserRouter([
                     </Suspense>
                 ),
             },
+            {
+                element: (
+                    <AuthRoute isPrivate={true}>
+                        <Suspense fallback={<Loader />}>
+                            <DashboardLayout />
+                        </Suspense>
+                    </AuthRoute>
+                ),
+                children: [
+                    { path: "/analytics", element: <Analytics /> }
+                ]
+            }
         ],
     },
 ]);
