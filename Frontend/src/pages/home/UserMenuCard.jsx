@@ -1,13 +1,13 @@
 import React from "react";
 import { Link } from "react-router";
 
-const UserMenuCard = ({setShowProfile}) => {
+const UserMenuCard = ({ setShowProfile }) => {
   return (
     <div className="absolute right-0 sm:right-10 top-14 w-full sm:w-80 bg-[#121212] text-white rounded-lg shadow-lg p-2 z-50">
-      
+
       <div className="flex flex-col gap-1">
-        <MenuItem icon="ri-user-line" text="Account" path={'/account'}/>
-        <MenuItem icon="ri-profile-line" text="Profile" path={'/profile'}/>
+        <MenuItem icon="ri-user-line" text="Account" path={'/account'} />
+        <MenuItem icon="ri-profile-line" text="Profile" path={'/profile'} />
         <MenuItem icon="ri-vip-crown-line" text="Upgrade to Premium" external />
         <MenuItem icon="ri-customer-service-2-line" text="Support" external />
         <MenuItem icon="ri-download-line" text="Download" external />
@@ -38,8 +38,8 @@ const UserMenuCard = ({setShowProfile}) => {
 
 const MenuItem = ({ icon, text, external, path }) => {
   return (
-    <Link to={path} onClick={()=>{setShowProfile(false)}} className={`${text === 'Log out' ? "hover:bg-red-500/30" : "hover:bg-[#2a2a2a]"} flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition`}>
-      
+    <Link to={path} onClick={() => { setShowProfile(false) }} className={`${text === 'Log out' ? "hover:bg-red-500/30" : "hover:bg-[#2a2a2a]"} flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition`}>
+
       <div className="flex items-center gap-3">
         <i className={`${icon} text-lg`}></i>
         <span className="text-sm">{text}</span>
