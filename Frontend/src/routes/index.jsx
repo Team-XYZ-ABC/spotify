@@ -9,6 +9,11 @@ import AuthRoute from "../guards/AuthRoute";
 import Loader from "../components/ui/Loader";
 import Analytics from "../pages/user/Artist/Analytics";
 import DashboardLayout from "../layouts/DashboardLayout";
+import Playlists from "../pages/user/Artist/Playlists";
+import Albums from "../pages/user/Artist/Albums";
+import Trending from "../pages/user/Artist/Trending";
+import AdsLibrary from "../pages/user/Artist/AdsLibrary";
+import UploadTrack from "../pages/user/Artist/UploadTrack";
 
 // --- Lazy Loads ---
 const Home = lazy(() => import("../pages/home/Home"));
@@ -85,7 +90,12 @@ export const router = createBrowserRouter([
                     </AuthRoute>
                 ),
                 children: [
-                    { path: "/analytics", element: <Analytics /> }
+                    { path: "/analytics", element: <Analytics /> },
+                    { path: "/playlists", element: <Playlists /> },
+                    { path: "/albums", element: <Albums/> },
+                    { path: "/trending", element: <Trending /> },
+                    { path: "/ads-library", element: <AdsLibrary /> },
+                    { path: "/uploadtrack", element: <UploadTrack /> }
                 ]
             }
         ],

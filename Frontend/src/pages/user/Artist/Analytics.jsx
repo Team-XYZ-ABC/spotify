@@ -2,7 +2,7 @@ import React from 'react'
 
 const Analytics = () => {
   return (
-    <div className='text-white border w-full'>Analytics</div>
+    <div className=''>Analytics</div>
   )
 }
 
