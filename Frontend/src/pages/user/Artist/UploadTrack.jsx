@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import UploadSongForm from "../../../components/ui/UploadSongForm";
 
 const steps = [
   {
@@ -24,6 +25,8 @@ const steps = [
 ];
 
 const UploadTrack = () => {
+    const [openUploadTrackForm, setOpenUploadTrackForm] = useState(false);
+
   return (
     <div className="min-h-screen px-6 md:px-12 py-12 flex flex-col justify-evenly text-white space-y-16">
       <div className="max-w-5xl space-y-6">
@@ -34,8 +37,9 @@ const UploadTrack = () => {
         <p className="text-base md:text-2xl ml-2 text-zinc-400 max-w-xl">
           Reach millions of listeners and find your fans around the world.
         </p>
-        <button className="px-6 cursor-pointer hover:bg-white/95 hover:scale-102 transition-all py-3 rounded-full bg-white text-black">Get Started</button>
+        <button onClick={()=>setOpenUploadTrackForm(true)} className="px-6 cursor-pointer hover:bg-white/95 hover:scale-102 transition-all py-3 rounded-full bg-white text-black">Get Started</button>
       </div>
+      <UploadSongForm openUploadTrackForm={openUploadTrackForm}/>
       <div className="flex flex-col gap-4">
         <h1 className="text-xl">Stages we follow</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
