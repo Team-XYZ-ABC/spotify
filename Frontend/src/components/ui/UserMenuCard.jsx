@@ -1,5 +1,4 @@
-import React from "react";
-import { Link } from "react-router";
+import MenuItem from "./MenuItem";
 
 const UserMenuCard = ({ setShowProfile }) => {
   return (
@@ -24,6 +23,7 @@ const UserMenuCard = ({ setShowProfile }) => {
 
       <div className="flex flex-col gap-1">
         <MenuItem setShowProfile={setShowProfile} icon="ri-user-line" text="Account" path="/account" />
+        <MenuItem setShowProfile={setShowProfile} icon="ri-dashboard-horizontal-line" text="Dashboard" path="/analytics" isArtist/>
         <MenuItem setShowProfile={setShowProfile} icon="ri-profile-line" text="Profile" path="/profile" />
         <MenuItem setShowProfile={setShowProfile} icon="ri-vip-crown-line" text="Upgrade to Premium" external />
         <MenuItem setShowProfile={setShowProfile} icon="ri-customer-service-2-line" text="Support" external />
@@ -48,29 +48,6 @@ const UserMenuCard = ({ setShowProfile }) => {
         </div>
       </div>
     </div>
-  );
-};
-
-const MenuItem = ({ icon, text, external, path, setShowProfile }) => {
-  return (
-    <Link
-      to={path || "#"}
-      onClick={() => setShowProfile(false)}
-      className={`
-        flex items-center justify-between px-3 py-3 md:py-2 
-        rounded-md transition
-        ${text === "Log out" ? "hover:bg-red-500/30" : "hover:bg-[#2a2a2a]"}
-      `}
-    >
-      <div className="flex items-center gap-3">
-        <i className={`${icon} text-lg`}></i>
-        <span className="text-sm md:text-sm">{text}</span>
-      </div>
-
-      {external && (
-        <i className="ri-external-link-line text-sm text-gray-400"></i>
-      )}
-    </Link>
   );
 };
 
