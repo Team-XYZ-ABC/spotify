@@ -4,16 +4,24 @@ import useAuth from './hooks/useAuth'
 import Loader from './components/ui/Loader'
 
 const App = () => {
-const {getMe, loading, error, user} = useAuth()
-console.log(user)
-  useEffect(()=>{
-    getMe()
-  },[])
+  const { getMe, isInitializing } = useAuth()
 
+  useEffect(() => {
+    getMe()
+  }, [getMe])
+
+
+  if (isInitializing) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <Loader />
+      </div>
+    )
+  }
 
   return (
     <div className='h-screen w-full'>
-      <Outlet/>
+      <Outlet />
     </div>
   )
 }
