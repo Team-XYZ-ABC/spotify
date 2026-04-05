@@ -37,7 +37,16 @@ const DashboardSidebar = ({ isCollapsed, setIsCollapsed }) => {
         <div className="flex items-center justify-between px-4 h-16 border-b border-zinc-800">
           <div className="flex items-center justify-between w-full">
             {!isCollapsed
-              ? <h1 className="text-sm font-semibold">Dashboard</h1>
+              ? (
+                <div className="flex items-end gap-1 ">
+                  <img
+                    src="/img/2024-spotify-full-logo/Spotify_Full_Logo_RGB_Green.png"
+                    alt="Spotify"
+                    className="h-8 object-contain transition-all ease-out duration-400"
+                  />
+                  <span className="text-xs mb-1">for Artists</span>
+                </div>
+              )
               : <div className="w-6" />}
 
             <div className="flex items-center gap-2">
