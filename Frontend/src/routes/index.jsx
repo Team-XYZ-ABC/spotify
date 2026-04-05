@@ -1,18 +1,27 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router";
 import App from "../App";
-import MainLayout from "../layouts/MainLayout";
-import { publicRoutes } from "./public.routes";
-import { authRoutes } from "./auth.routes";
-import { privateRoutes } from "./private.routes";
-import { NotFound } from "./lazyImports";
 
-import { Suspense } from "react";
+// --- Layouts & Guards ---
+import MainLayout from "../layouts/MainLayout";
+import AuthLayout from "../layouts/AuthLayout";
+import AuthRoute from "../guards/AuthRoute";
 import Loader from "../components/ui/Loader";
+
+// --- Lazy Loads ---
+const Home = lazy(() => import("../pages/home/Home"));
+const Login = lazy(() => import("../pages/auth/Login"));
+const Register = lazy(() => import("../pages/auth/Register"));
+const PhoneNumber = lazy(() => import("../pages/auth/PhoneNumber"));
+const VerifyOtp = lazy(() => import("../pages/auth/VerifyOtp"));
+const RegisterStep1 = lazy(() => import("../pages/auth/RegisterStep1"));
+const UserProfile = lazy(() => import("../pages/user/profile/UserProfile"));
+const NotFound = lazy(() => import("../components/common/NotFound"));
 
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <App />,
+        element: <App />, 
         children: [
             {
                 element: (
@@ -21,16 +30,49 @@ export const router = createBrowserRouter([
                     </Suspense>
                 ),
                 children: [
-                    ...publicRoutes,
-                    ...privateRoutes,
+                    // Just drop public paths here in the future
+                    // { path: "/about", element: <About /> },
                 ],
             },
 
-            ...authRoutes,
+            {
+                element: (
+                    <AuthRoute isPrivate={true}>
+                        <Suspense fallback={<Loader />}>
+                            <MainLayout />
+                        </Suspense>
+                    </AuthRoute>
+                ),
+                children: [
+                    { path: "/", element: <Home /> },
+                    { path: "/profile", element: <UserProfile /> },
+                ],
+            },
+
+            {
+                element: (
+                    <AuthRoute isPrivate={false}>
+                        <Suspense fallback={<Loader />}>
+                            <AuthLayout />
+                        </Suspense>
+                    </AuthRoute>
+                ),
+                children: [
+                    { path: "/login", element: <Login /> },
+                    { path: "/register", element: <Register /> },
+                    { path: "/register/step-1", element: <RegisterStep1 /> },
+                    { path: "/register/phoneRegister", element: <PhoneNumber /> },
+                    { path: "/register/verify-otp", element: <VerifyOtp /> },
+                ],
+            },
 
             {
                 path: "*",
-                element: <NotFound />,
+                element: (
+                    <Suspense fallback={<Loader />}>
+                        <NotFound />
+                    </Suspense>
+                ),
             },
         ],
     },
