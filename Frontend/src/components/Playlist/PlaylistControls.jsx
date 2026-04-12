@@ -1,44 +1,71 @@
 import React from "react";
 
-const PlaylistControls = () => {
+const PlaylistControls = ({
+    isEmpty,
+    canManagePlaylist,
+    canModifyTracks,
+    onFindSongs,
+    onCreatePlaylist,
+    onOpenCollaborators,
+    onDeletePlaylist,
+}) => {
     return (
-        <div className="px-6 md:px-8 py-6 bg-black flex items-center justify-between">
-
-            {/* Left */}
-            <div className="flex items-center gap-6">
-
-                {/* Mobile Icons */}
-                <div className="md:hidden flex items-center gap-6 text-4xl text-gray-300">
-                    <button className="text-green-500">
-                        <i className="ri-heart-fill"></i>
+        <div className="px-4 sm:px-6 lg:px-8 py-5 bg-[linear-gradient(180deg,rgba(0,0,0,0.36),transparent)]">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                    <button
+                        disabled={isEmpty}
+                        className={`flex h-14 w-14 items-center justify-center rounded-full text-3xl transition-transform ${isEmpty
+                            ? "cursor-not-allowed bg-zinc-700 text-zinc-500"
+                            : "bg-[#1ed760] text-black hover:scale-[1.03]"
+                            }`}
+                    >
+                        <i className="ri-play-fill ml-1"></i>
                     </button>
 
-                    <button>
-                        <i className="ri-share-forward-line"></i>
+                    <button
+                        onClick={onFindSongs}
+                        disabled={!canModifyTracks}
+                        className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition hover:scale-[1.02]"
+                    >
+                        Find songs
                     </button>
 
-                    <button>
-                        <i className="ri-more-fill"></i>
+                    <button
+                        onClick={onCreatePlaylist}
+                        className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/5"
+                    >
+                        New playlist
                     </button>
+
+                    {canManagePlaylist && (
+                        <button
+                            onClick={onDeletePlaylist}
+                            className="rounded-full border border-rose-400/40 px-4 py-2 text-sm font-semibold text-rose-300 transition hover:border-rose-300 hover:bg-rose-400/10"
+                        >
+                            Delete
+                        </button>
+                    )}
                 </div>
 
-                {/* Desktop Play */}
-                <button className="hidden md:flex w-16 h-16 rounded-full bg-green-500 text-black text-3xl items-center justify-center">
-                    <i className="ri-play-fill ml-1"></i>
-                </button>
-            </div>
-
-            {/* Mobile Play */}
-            <button className="md:hidden w-20 h-20 rounded-full bg-green-500 text-black text-4xl flex items-center justify-center">
-                <i className="ri-play-fill ml-1"></i>
-            </button>
-
-            {/* Desktop Right */}
-            <div className="hidden md:flex items-center gap-6 text-4xl text-gray-300">
-                <button><i className="ri-shuffle-line"></i></button>
-                <button><i className="ri-download-2-line"></i></button>
-                <button><i className="ri-user-add-line"></i></button>
-                <button><i className="ri-more-fill"></i></button>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-300 sm:gap-3">
+                    <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition hover:bg-white/10">
+                        <i className="ri-shuffle-line text-xl"></i>
+                    </button>
+                    <button
+                        onClick={onOpenCollaborators}
+                        disabled={!canManagePlaylist}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        <i className="ri-user-add-line text-xl"></i>
+                    </button>
+                    <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition hover:bg-white/10">
+                        <i className="ri-share-forward-line text-xl"></i>
+                    </button>
+                    <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition hover:bg-white/10">
+                        <i className="ri-more-fill text-xl"></i>
+                    </button>
+                </div>
             </div>
         </div>
     );
