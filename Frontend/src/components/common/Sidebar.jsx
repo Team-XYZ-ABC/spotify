@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router";
 
 const Sidebar = ({
   isOpen,
@@ -76,9 +77,9 @@ const Sidebar = ({
                 <p className="text-xs text-gray-400">
                   It's easy, we'll help you
                 </p>
-                <button className="bg-white text-black px-4 py-1.5 rounded-full text-sm font-semibold w-full sm:w-auto">
+                <Link to="/playlist" className="bg-white text-black px-4 py-1.5 rounded-full text-sm font-semibold w-full sm:w-auto">
                   Create playlist
-                </button>
+                </Link>
               </div>
 
               <div className="bg-[#1f1f1f] p-4 rounded-lg space-y-3 hover:bg-[#2a2a2a]">

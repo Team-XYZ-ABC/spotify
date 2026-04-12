@@ -9,6 +9,7 @@ import AuthRoute from "../guards/AuthRoute";
 import Loader from "../components/ui/Loader";
 import Analytics from "../pages/user/Artist/Analytics";
 import DashboardLayout from "../layouts/DashboardLayout";
+import Playlist from "../pages/Playlist/Playlist";
 
 // --- Lazy Loads ---
 const Home = lazy(() => import("../pages/home/Home"));
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     { path: "/", element: <Home /> },
+                    { path: "/playlist", element: <Playlist /> },
                     { path: "/profile", element: <UserProfile /> },
                 ],
             },
