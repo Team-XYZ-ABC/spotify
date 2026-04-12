@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
+import { validateEmail, validateDisplayName, validateUsername, validatePassword } from "../utils/validator";
 import {
     setUser,
     setLoading,
@@ -38,14 +39,14 @@ const useAuth = () => {
     const handleEmailVerify = useCallback((email) =>
         handleAsync(async () => {
             if (!email) throw new Error("Email is required");
-            if (!email.includes("@")) throw new Error("Invalid email");
+            if (!validateEmail(email)) throw new Error("Invalid email");
 
             const res = await checkEmailExistService(email);
             if (res.exists) throw new Error("Email already registered");
 
             navigate(`/register/step-1?email=${email}`);
         }),
-    [handleAsync, navigate]);
+        [handleAsync, navigate]);
 
     const registerUser = useCallback((form) =>
         handleAsync(async () => {
@@ -54,8 +55,16 @@ const useAuth = () => {
             if (!email || !displayName || !username || !password) {
                 throw new Error("All fields are required");
             }
-
-            if (password.length < 6) {
+            if (!validateEmail(email)) {
+                throw new Error("Invalid email");
+            }
+            if (!validateDisplayName(displayName)) {
+                throw new Error("Display name must be between 3 and 50 characters");
+            }
+            if (!validateUsername(username)) {
+                throw new Error("Username must be 3-30 characters, no spaces or special characters");
+            }
+            if (!validatePassword(password)) {
                 throw new Error("Password must be at least 6 characters");
             }
 
@@ -63,7 +72,7 @@ const useAuth = () => {
             dispatch(setUser(res.user));
             navigate("/");
         }),
-    [handleAsync, dispatch, navigate]);
+        [handleAsync, dispatch, navigate]);
 
     const loginUser = useCallback((data) =>
         handleAsync(async () => {
@@ -72,7 +81,7 @@ const useAuth = () => {
             navigate("/");
             return res;
         }),
-    [handleAsync, dispatch, navigate]);
+        [handleAsync, dispatch, navigate]);
 
     const logoutUser = useCallback(() =>
         handleAsync(async () => {
@@ -80,7 +89,7 @@ const useAuth = () => {
             dispatch(logoutAction());
             navigate("/login");
         }),
-    [handleAsync, dispatch, navigate]);
+        [handleAsync, dispatch, navigate]);
 
     const getMe = useCallback(async () => {
         try {

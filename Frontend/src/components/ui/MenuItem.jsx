@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-const MenuItem = ({ isArtist, icon, text, external, path, setShowProfile }) => {
+const MenuItem = ({ isArtist, icon, text, external, path, setShowProfile, onClick }) => {
     return (
         <>
             {isArtist ? (
@@ -18,7 +18,10 @@ const MenuItem = ({ isArtist, icon, text, external, path, setShowProfile }) => {
             ) : (
                 <Link
                     to={path || "#"}
-                    onClick={() => setShowProfile(false)}
+                    onClick={(e) => {
+                        setShowProfile(false);
+                        if (onClick) onClick(e);
+                    }}
                     className={`
         flex items-center justify-between px-3 py-3 md:py-2 
         rounded-md transition

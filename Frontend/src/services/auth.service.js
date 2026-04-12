@@ -39,7 +39,7 @@ export const loginService = async (data) => {
 
 export const logoutService = async () => {
     try {
-        const res = await api.post("/auth/users/logout");
+        const res = await api.post("/auth/logout");
         return res.data;
     } catch (error) {
         handleError(error, "Logout failed");

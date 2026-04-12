@@ -2,7 +2,7 @@ import { toFile } from "@imagekit/nodejs";
 import imagekit from "../configs/imagekit.config.js";
 
 
-export const uploadSong = async(buffer , fileName , folder="")=>{
+export const uploadFile = async(buffer , fileName , folder="")=>{
     const result = await imagekit.files.upload({
         file: await toFile(buffer , fileName),
         fileName: fileName,

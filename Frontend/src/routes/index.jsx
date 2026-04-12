@@ -14,6 +14,7 @@ import Albums from "../pages/user/Artist/Albums";
 import Trending from "../pages/user/Artist/Trending";
 import AdsLibrary from "../pages/user/Artist/AdsLibrary";
 import UploadTrack from "../pages/user/Artist/UploadTrack";
+import Playlist from "../pages/Playlist/Playlist";
 
 // --- Lazy Loads ---
 const Home = lazy(() => import("../pages/home/Home"));
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     { path: "/", element: <Home /> },
+                    { path: "/playlist", element: <Playlist /> },
                     { path: "/profile", element: <UserProfile /> },
                 ],
             },

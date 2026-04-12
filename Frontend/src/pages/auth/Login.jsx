@@ -91,8 +91,8 @@ const Login = () => {
           onClick={handleLogin}
           disabled={!email || !password || loading}
           className={`py-3 rounded-full font-bold transition flex justify-center items-center ${!email || !password || loading
-              ? "bg-gray-500 text-gray-300 cursor-not-allowed"
-              : "bg-green-500 text-black cursor-pointer hover:bg-green-400 active:scale-95"
+            ? "bg-gray-500 text-gray-300 cursor-not-allowed"
+            : "bg-green-500 text-black cursor-pointer hover:bg-green-400 active:scale-95"
             }`}
         >
           {loading ? "Logging in..." : "Log In"}
