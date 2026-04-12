@@ -1,19 +1,26 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Input from "../common/Input";
 import ToggleSwitch from "../common/ToggleSwitch";
 import FileUploader from "../common/FileUploader";
+import Dropdown from "../common/Dropdown";
+import ConfirmationDialog from "./ConfirmationDialog";
+import { COUNTRIES, GENRES, LANGUAGES } from "../../data/DropDownSuggestions";
 
-const UploadSongForm = ({ openUploadTrackForm, setOpenUploadTrackForm }) => {
+const UploadSongForm = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
         title: "",
         artists: "",
         album: "",
-        genres: "",
-        lang: "",
+        genre: "",
+        language: "",
         isExplicit: false,
         copyrightOwner: "",
         isrc: "",
-        availableCountries: "",
+        countries: [],
+        releaseDate: "",
+        recordLabel: "",
+        composer: "",
+        producer: "",
         coverImage: null,
         file: null,
     });
@@ -23,8 +30,57 @@ const UploadSongForm = ({ openUploadTrackForm, setOpenUploadTrackForm }) => {
     const [audioFileSize, setAudioFileSize] = useState("");
     const [isUploading, setIsUploading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+    const [showConfirmation, setShowConfirmation] = useState(false);
 
-    const modalRef = useRef(null);
+    const hasUnsavedChanges = () => {
+        return (
+            formData.title.trim() ||
+            formData.artists.trim() ||
+            formData.album.trim() ||
+            formData.genre ||
+            formData.language ||
+            formData.coverImage ||
+            formData.file ||
+            formData.releaseDate ||
+            formData.recordLabel ||
+            formData.composer ||
+            formData.producer
+        );
+    };
+
+    const handleBackClick = () => {
+        if (hasUnsavedChanges()) {
+            setShowConfirmation(true);
+        } else {
+            onClose(false);
+        }
+    };
+
+    const handleConfirmDiscard = () => {
+        setShowConfirmation(false);
+        setFormData({
+            title: "",
+            artists: "",
+            album: "",
+            genre: "",
+            language: "",
+            isExplicit: false,
+            copyrightOwner: "",
+            isrc: "",
+            countries: [],
+            releaseDate: "",
+            recordLabel: "",
+            composer: "",
+            producer: "",
+            coverImage: null,
+            file: null,
+        });
+        setCoverPreview(null);
+        setAudioFileName("");
+        setAudioFileSize("");
+        setErrorMsg("");
+        onClose(false);
+    };
 
     useEffect(() => {
         if (formData.coverImage) {
@@ -81,282 +137,362 @@ const UploadSongForm = ({ openUploadTrackForm, setOpenUploadTrackForm }) => {
             JSON.stringify(formData.artists.split(",").map((a) => a.trim())),
         );
         data.append("album", formData.album);
-        data.append(
-            "genres",
-            JSON.stringify(formData.genres.split(",").map((g) => g.trim())),
-        );
-        data.append("lang", formData.lang);
+        data.append("genre", formData.genre);
+        data.append("language", formData.language);
         data.append("isExplicit", formData.isExplicit);
         data.append("copyrightOwner", formData.copyrightOwner);
         data.append("isrc", formData.isrc);
-        data.append(
-            "availableCountries",
-            JSON.stringify(
-                formData.availableCountries.split(",").map((c) => c.trim()),
-            ),
-        );
+        data.append("countries", JSON.stringify(formData.countries));
+        data.append("releaseDate", formData.releaseDate);
+        data.append("recordLabel", formData.recordLabel);
+        data.append("composer", formData.composer);
+        data.append("producer", formData.producer);
 
         console.log("Submitting:", formData);
         await new Promise((resolve) => setTimeout(resolve, 800));
 
         setIsUploading(false);
-        setOpenUploadTrackForm(false);
         setFormData({
             title: "",
             artists: "",
             album: "",
-            genres: "",
-            lang: "",
+            genre: "",
+            language: "",
             isExplicit: false,
             copyrightOwner: "",
             isrc: "",
-            availableCountries: "",
+            countries: [],
+            releaseDate: "",
+            recordLabel: "",
+            composer: "",
+            producer: "",
             coverImage: null,
             file: null,
         });
         setCoverPreview(null);
         setAudioFileName("");
         setAudioFileSize("");
+        setErrorMsg("");
+        onClose(false);
     };
 
     useEffect(() => {
         const handleEsc = (e) => {
-            if (e.key === "Escape") setOpenUploadTrackForm(false);
+            if (e.key === "Escape") {
+                handleBackClick();
+            }
         };
-        if (openUploadTrackForm) {
+        if (isOpen) {
             document.addEventListener("keydown", handleEsc);
             return () => document.removeEventListener("keydown", handleEsc);
         }
-    }, [openUploadTrackForm, setOpenUploadTrackForm]);
+    }, [isOpen, formData]);
 
-    const handleBackdropClick = (e) => {
-        if (modalRef.current && !modalRef.current.contains(e.target)) {
-            setOpenUploadTrackForm(false);
-        }
-    };
-
-    if (!openUploadTrackForm) return null;
+    if (!isOpen) return null;
 
     return (
-        <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300"
-            onClick={handleBackdropClick}
-        >
-            <div
-                ref={modalRef}
-                className="w-full max-w-3xl h-2/3 bg-[#121212] rounded shadow-2xl overflow-y-auto no-scrollbar animate-fadeInUp"
-                style={{ animation: "fadeInUp 0.3s ease-out" }}
-            >
-                <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg
-                                className="w-5 h-5 text-black"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                                />
-                            </svg>
-                        </div>
-                        <h2 className="text-xl font-bold text-white tracking-tight">
-                            Upload a track
-                        </h2>
-                    </div>
-                    <button
-                        onClick={() => setOpenUploadTrackForm(false)}
-                        className="text-gray-400 hover:text-white cursor-pointer transition-colors p-2 rounded-full hover:bg-white/10"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
-                </div>
+        <>
+            <ConfirmationDialog
+                isOpen={showConfirmation}
+                onConfirm={handleConfirmDiscard}
+                onCancel={() => setShowConfirmation(false)}
+            />
 
-                <div className="p-6 max-h-[80vh] overflow-y-auto no-scrollbar">
-                    <div className="grid grid-cols-1 md:flex md:flex-col gap-6 mb-6">
-                        <div className="space-y-5">
-                            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                Track details
-                            </h3>
-                            <div className="flex justify-between gap-4">
-                                <Input
-                                    label="Title"
-                                    value={formData.title}
-                                    onChange={(v) => handleChange("title", v)}
-                                    placeholder="e.g., Blinding Lights"
-                                    required
-                                />
-                                <Input
-                                    label="Artists"
-                                    value={formData.artists}
-                                    onChange={(v) => handleChange("artists", v)}
-                                    placeholder="Separate with commas (e.g., The Weeknd, Daft Punk)"
-                                />
+            <div className="min-h-screen bg-linear-to-b from-[#0a0a0a] via-[#0f0f0f] to-[#000000] text-white flex flex-col">
+                <div className="sticky top-0 z-40 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
+                    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 md:gap-3">
+                                <button
+                                    onClick={handleBackClick}
+                                    className="p-1.5 md:p-2 rounded-lg hover:bg-white/10"
+                                    title="Go back"
+                                >
+                                    <svg
+                                        className="w-5 h-5 md:w-6 md:h-6 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M15 19l-7-7 7-7"
+                                        />
+                                    </svg>
+                                </button>
+                                <div className="h-6 md:h-7 w-px bg-white/10">
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 md:w-9 md:h-9 bg-linear-to-br from-[#1DB954] to-[#1ed760] rounded-md flex items-center justify-center">
+                                        <svg
+                                            className="w-5 h-5 md:w-5 md:h-5 text-black"
+                                            fill="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                        </svg>
+                                    </div>
+                                    <h1 className="text-base md:text-lg font-bold">
+                                        Upload Track
+                                    </h1>
+                                </div>
                             </div>
-                            <div className="flex justify-between gap-4">
-                                <Input
-                                    label="Album"
-                                    value={formData.album}
-                                    onChange={(v) => handleChange("album", v)}
-                                    placeholder="Album name (optional)"
-                                />
-                                <Input
-                                    label="Genres"
-                                    value={formData.genres}
-                                    onChange={(v) => handleChange("genres", v)}
-                                    placeholder="e.g., Pop, R&B"
-                                />
-                                <Input
-                                    label="Language"
-                                    value={formData.lang}
-                                    onChange={(v) => handleChange("lang", v)}
-                                    placeholder="e.g., English, Spanish"
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-5">
-                            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                Rights & metadata
-                            </h3>
-                            <ToggleSwitch
-                                label="Explicit Content"
-                                checked={formData.isExplicit}
-                                onChange={(checked) =>
-                                    handleChange("isExplicit", checked)}
-                            />
-                            <div className="flex justify-between gap-4">
-                                <Input
-                                    label="Copyright Owner"
-                                    value={formData.copyrightOwner}
-                                    onChange={(v) =>
-                                        handleChange("copyrightOwner", v)}
-                                    placeholder="© Copyright holder"
-                                />
-                                <Input
-                                    label="ISRC"
-                                    value={formData.isrc}
-                                    onChange={(v) => handleChange("isrc", v)}
-                                    placeholder="Optional - e.g., USUM12345678"
-                                />
-                                <Input
-                                    label="Available Countries"
-                                    value={formData.availableCountries}
-                                    onChange={(v) =>
-                                        handleChange("availableCountries", v)}
-                                    placeholder="Comma-separated country codes (US, GB, JP)"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/10">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Cover Art
-                            </label>
-                            <FileUploader
-                                label="Upload cover image"
-                                accept="image/*"
-                                onFileSelect={(file) =>
-                                    handleChange("coverImage", file)}
-                                preview={coverPreview}
-                                previewType="image"
-                                placeholder="JPG or PNG, at least 640x640px"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Audio File
-                            </label>
-                            <FileUploader
-                                label="Upload audio file"
-                                accept="audio/*"
-                                onFileSelect={handleAudioFileChange}
-                                preview={audioFileName
-                                    ? {
-                                        name: audioFileName,
-                                        size: audioFileSize,
-                                    }
-                                    : null}
-                                previewType="audio"
-                                placeholder="MP3, FLAC, WAV (max 100MB)"
-                            />
                         </div>
                     </div>
                 </div>
+
+                <div className="flex-1 overflow-y-auto">
+                    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+                        <div className="mb-8 md:mb-10">
+                            <h2 className="text-xs md:text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
+                                Track Information
+                            </h2>
+                            <div className="bg-white/2 rounded-xl p-4 md:p-6 border border-white/5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                                    <Input
+                                        label="Track Title"
+                                        value={formData.title}
+                                        onChange={(v) =>
+                                            handleChange("title", v)}
+                                        placeholder="Your song title"
+                                        required
+                                    />
+                                    <Input
+                                        label="Primary Artist(s)"
+                                        value={formData.artists}
+                                        onChange={(v) =>
+                                            handleChange("artists", v)}
+                                        placeholder="Separate with commas"
+                                        required
+                                    />
+                                    <Input
+                                        label="Album Name"
+                                        value={formData.album}
+                                        onChange={(v) =>
+                                            handleChange("album", v)}
+                                        placeholder="Optional"
+                                    />
+                                    <Dropdown
+                                        label="Genre"
+                                        value={formData.genre}
+                                        onChange={(v) =>
+                                            handleChange("genre", v)}
+                                        options={GENRES}
+                                        placeholder="Select genre"
+                                    />
+                                    <Dropdown
+                                        label="Language"
+                                        value={formData.language}
+                                        onChange={(v) =>
+                                            handleChange("language", v)}
+                                        options={LANGUAGES}
+                                        placeholder="Select language"
+                                    />
+                                    <Input
+                                        label="Release Date"
+                                        type="date"
+                                        value={formData.releaseDate}
+                                        onChange={(v) =>
+                                            handleChange("releaseDate", v)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mb-8 md:mb-10">
+                            <h2 className="text-xs md:text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
+                                Files & Media
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-white mb-2">
+                                        Cover Art
+                                        <span className="text-[#1DB954] ml-1">
+                                            •
+                                        </span>
+                                    </label>
+                                    <FileUploader
+                                        label="Upload cover"
+                                        accept="image/*"
+                                        onFileSelect={(file) =>
+                                            handleChange("coverImage", file)}
+                                        preview={coverPreview}
+                                        previewType="image"
+                                        placeholder="JPG or PNG, 640x640px+"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-white mb-2">
+                                        Audio File
+                                        <span className="text-[#1DB954] ml-1">
+                                            •
+                                        </span>
+                                    </label>
+                                    <FileUploader
+                                        label="Upload audio"
+                                        accept="audio/*"
+                                        onFileSelect={handleAudioFileChange}
+                                        preview={audioFileName
+                                            ? {
+                                                name: audioFileName,
+                                                size: audioFileSize,
+                                            }
+                                            : null}
+                                        previewType="audio"
+                                        placeholder="MP3, FLAC, WAV (max 100MB)"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mb-8 md:mb-10">
+                            <h2 className="text-xs md:text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
+                                Rights & Metadata
+                            </h2>
+                            <div className="bg-white/2 rounded-xl p-4 md:p-6 border border-white/5">
+                                <div className="mb-4 md:mb-6 pb-4 md:pb-6 border-b border-white/5">
+                                    <ToggleSwitch
+                                        label="Explicit Content"
+                                        checked={formData.isExplicit}
+                                        onChange={(checked) =>
+                                            handleChange("isExplicit", checked)}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                                    <Input
+                                        label="Copyright Owner"
+                                        value={formData.copyrightOwner}
+                                        placeholder="© Your name"
+                                        onChange={(v) =>
+                                            handleChange("copyrightOwner", v)}
+                                    />
+                                    <Input
+                                        label="Record Label"
+                                        value={formData.recordLabel}
+                                        placeholder="Optional"
+                                        onChange={(v) =>
+                                            handleChange("recordLabel", v)}
+                                    />
+                                    <Input
+                                        label="ISRC Code"
+                                        value={formData.isrc}
+                                        placeholder="e.g., USUM12345678"
+                                        onChange={(v) =>
+                                            handleChange("isrc", v)}
+                                    />
+                                    <Input
+                                        label="Composer/Songwriter"
+                                        value={formData.composer}
+                                        placeholder="Optional"
+                                        onChange={(v) =>
+                                            handleChange("composer", v)}
+                                    />
+                                    <Dropdown
+                                        label="Distribution Countries"
+                                        value={formData.countries}
+                                        onChange={(v) =>
+                                            handleChange("countries", v)}
+                                        options={COUNTRIES}
+                                        placeholder="Select countries"
+                                        search={true}
+                                    />
+                                    <Input
+                                        label="Producer"
+                                        value={formData.producer}
+                                        placeholder="Optional"
+                                        onChange={(v) =>
+                                            handleChange("producer", v)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {errorMsg && (
-                    <div className="mb-5 mx-6 bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded text-sm">
-                        {errorMsg}
+                    <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 mb-3 md:mb-4">
+                        <div className="bg-linear-to-r from-red-500/10 to-red-600/5 border border-red-500/20 text-red-400 p-3 md:p-4 rounded-lg text-xs md:text-sm font-medium">
+                            <div className="flex items-center gap-2 md:gap-3">
+                                <svg
+                                    className="w-4 h-4 md:w-5 md:h-5 text-red-400 shrink-0"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                                {errorMsg}
+                            </div>
+                        </div>
                     </div>
                 )}
 
-                <div className="px-6 py-5 border-t border-white/10 flex justify-end gap-3 bg-black/20">
-                    <button
-                        onClick={() => setOpenUploadTrackForm(false)}
-                        className="px-6 py-2 cursor-pointer rounded-full text-sm font-semibold text-gray-300 hover:text-white hover:bg-white/10 transition-all"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isUploading}
-                        className={`px-6 py-2 cursor-pointer rounded-full text-sm font-semibold bg-green-500 text-black transition-all flex items-center gap-2 ${
-                            isUploading
-                                ? "opacity-70 cursor-not-allowed"
-                                : "hover:scale-105 hover:bg-green-400"
-                        }`}
-                    >
-                        {isUploading
-                            ? (
-                                <>
-                                    <svg
-                                        className="animate-spin h-4 w-4 text-black"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            className="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            strokeWidth="4"
+                <div className="sticky bottom-0 border-t border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
+                    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-5 flex justify-between items-center gap-3 md:gap-4">
+                        <button
+                            onClick={handleBackClick}
+                            className="px-6 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold text-gray-300 border border-white/10 hover:border-white/30 hover:text-white hover:bg-white/5"
+                        >
+                            Back
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isUploading}
+                            className={`px-6 md:px-8 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold bg-linear-to-r from-[#1DB954] to-[#1ed760] text-black flex items-center gap-2 ${
+                                isUploading
+                                    ? "opacity-60 cursor-not-allowed"
+                                    : "hover:from-[#1ed760] hover:to-[#22ff64] shadow-lg"
+                            }`}
+                        >
+                            {isUploading
+                                ? (
+                                    <>
+                                        <svg
+                                            className="animate-spin h-4 w-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
                                         >
-                                        </circle>
-                                        <path
-                                            className="opacity-75"
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            >
+                                            </circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            >
+                                            </path>
+                                        </svg>
+                                        Uploading
+                                    </>
+                                )
+                                : (
+                                    <>
+                                        <svg
+                                            className="w-4 h-4"
                                             fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            viewBox="0 0 20 20"
                                         >
-                                        </path>
-                                    </svg>
-                                    Uploading...
-                                </>
-                            )
-                            : (
-                                "Upload track"
-                            )}
-                    </button>
+                                            <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
+                                        </svg>
+                                        Upload
+                                    </>
+                                )}
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

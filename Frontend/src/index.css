@@ -55,22 +55,16 @@ body {
   font-family: SpotifyExtraBold, sans-serif;
 }
 
-.no-scrollbar::-webkit-scrollbar {
+.*::-webkit-scrollbar {
   display: none;
 }
 
-.no-scrollbar {
+* {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+html,
+body {
+  overflow-x: hidden;
 }

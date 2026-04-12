@@ -25,7 +25,16 @@ const steps = [
 ];
 
 const UploadTrack = () => {
-  const [openUploadTrackForm, setOpenUploadTrackForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  if (showForm) {
+    return (
+      <UploadSongForm
+        isOpen={showForm}
+        onClose={setShowForm}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen px-6 md:px-12 py-12 flex flex-col justify-evenly text-white space-y-16">
@@ -38,13 +47,13 @@ const UploadTrack = () => {
           Reach millions of listeners and find your fans around the world.
         </p>
         <button
-          onClick={() => setOpenUploadTrackForm(true)}
-          className="px-6 cursor-pointer hover:bg-white/95 hover:scale-102 transition-all py-3 rounded-full bg-white text-black"
+          onClick={() => setShowForm(true)}
+          className="px-6 cursor-pointer hover:bg-white/95 hover:scale-102 transition-all py-3 rounded-full bg-white text-black font-semibold"
         >
           Get Started
         </button>
       </div>
-      
+
       <div className="flex flex-col gap-4">
         <h1 className="text-xl">Stages we follow</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -79,8 +88,6 @@ const UploadTrack = () => {
           ))}
         </div>
       </div>
-
-      <UploadSongForm openUploadTrackForm={openUploadTrackForm} setOpenUploadTrackForm={setOpenUploadTrackForm}/>
     </div>
   );
 };

@@ -70,7 +70,10 @@ export const router = createBrowserRouter([
                     { path: "/login", element: <Login /> },
                     { path: "/register", element: <Register /> },
                     { path: "/register/step-1", element: <RegisterStep1 /> },
-                    { path: "/register/phoneRegister", element: <PhoneNumber /> },
+                    {
+                        path: "/register/phoneRegister",
+                        element: <PhoneNumber />,
+                    },
                     { path: "/register/verify-otp", element: <VerifyOtp /> },
                 ],
             },
@@ -94,12 +97,12 @@ export const router = createBrowserRouter([
                 children: [
                     { path: "/analytics", element: <Analytics /> },
                     { path: "/playlists", element: <Playlists /> },
-                    { path: "/albums", element: <Albums/> },
+                    { path: "/albums", element: <Albums /> },
                     { path: "/trending", element: <Trending /> },
                     { path: "/ads-library", element: <AdsLibrary /> },
-                    { path: "/uploadtrack", element: <UploadTrack /> }
-                ]
-            }
+                    { path: "/uploadtrack", element: <UploadTrack /> },
+                ],
+            },
         ],
     },
 ]);
