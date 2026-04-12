@@ -1,6 +1,9 @@
 import MenuItem from "./MenuItem";
+import useAuth from "../../hooks/useAuth";
 
 const UserMenuCard = ({ setShowProfile }) => {
+  const { logoutUser } = useAuth();
+
   return (
     <div className="
       fixed md:absolute 
@@ -33,7 +36,7 @@ const UserMenuCard = ({ setShowProfile }) => {
 
       <div className="my-3 border-t border-gray-700"></div>
 
-      <MenuItem setShowProfile={setShowProfile} icon="ri-logout-box-r-line" text="Log out" />
+      <MenuItem setShowProfile={setShowProfile} icon="ri-logout-box-r-line" text="Log out" onClick={logoutUser} />
 
       <div className="mt-4">
         <p className="text-gray-400 text-xs mb-2">Your Updates</p>

@@ -229,7 +229,6 @@ export const getCurrentUser = async (req, res) => {
         }
 
         const decoded = jwtVerify(token);
-        console.log(decoded)
         const user = await UserModel.findById(decoded.id)
             .select("_id username role isActive");
 
