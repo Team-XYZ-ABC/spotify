@@ -7,24 +7,25 @@ const EditProfileModal = ({
   setName,
   profileImg,
   setProfileImg,
+  handleNameSave
 }) => {
   const fileInputRef = useRef(null);
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const img = URL.createObjectURL(file);
-      setProfileImg(img);
-    }
-  };
+  const file = e.target.files[0];
+
+  if (file) {
+    setProfileImg(URL.createObjectURL(file)); 
+  }
+};
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      
+
       <div className="bg-[#181818] w-[90%] sm:w-100 rounded-lg p-6 text-white relative">
-        
+
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-gray-400 hover:text-white"
@@ -65,7 +66,7 @@ const EditProfileModal = ({
         />
 
         <button
-          onClick={onClose}
+          onClick={handleNameSave}
           className="w-full bg-white text-black py-2 rounded font-semibold hover:scale-105 transition"
         >
           Save

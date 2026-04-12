@@ -1,4 +1,4 @@
-import { uploadSong } from "../services/imagekit.service.js";
+import { uploadFile } from "../services/imagekit.service.js";
 import TrackModel from "../models/track.model.js";
 import { generateISRC } from "../utils.js";
 import imagekit from "../configs/imagekit.config.js";
@@ -95,7 +95,7 @@ export const uploadTrack = async (req, res) => {
       });
     }
 
-    const result = await uploadSong(
+    const result = await uploadFile(
       file.buffer,
       file.originalname,
       "uploads/track"
