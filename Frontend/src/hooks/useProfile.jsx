@@ -18,8 +18,9 @@ export const useProfile = () => {
       dispatch(setLoading(true));
 
       const res = await getProfileService();
+      console.log(res)
 
-      dispatch(setProfile(res.data));
+      dispatch(setProfile(res));
     } catch (err) {
       dispatch(setError(err.message));
     }

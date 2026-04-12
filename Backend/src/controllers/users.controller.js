@@ -1,5 +1,6 @@
 import ArtistModel from "../models/artist.model.js";
 import UserModel from "../models/user.model.js";
+import { uploadFile } from "../services/imagekit.service.js";
 
 export const getProfile = async(req, res)=>{
     try {
@@ -37,8 +38,9 @@ export const getProfile = async(req, res)=>{
 export const updateProfile = async (req, res) => {
     try {
         const userId = req.user.id;
-
-        const { displayName, bio } = req.body;
+        
+        const { displayName, bio } = req.body || {};
+        const file = req.file
 
         const user = await UserModel.findById(userId);
 
@@ -48,7 +50,16 @@ export const updateProfile = async (req, res) => {
             });
         }
 
-        if (!displayName && !bio) {
+        if(file){
+            const result = await uploadFile(
+                file.buffer,
+                file.originalname,
+                "uploads/profile"
+            );
+            user.avatar = result.url
+        }
+
+        if (!displayName && !bio && !file) {
             return res.status(400).json({
                 message: "No data provided to update"
             });
@@ -64,7 +75,8 @@ export const updateProfile = async (req, res) => {
             displayName: user.displayName,
             bio: user.bio,
             email: user.email,
-            username: user.username
+            username: user.username,
+            avatar: user.avatar
         };
 
         res.status(200).json({
