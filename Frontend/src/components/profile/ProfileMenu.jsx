@@ -1,6 +1,7 @@
 import Dropdown from "./common/Dropdown";
 import DropdownItem from "./common/DropdownItem";
 import IconButton from "./common/IconButton";
+import { Link } from "react-router";
 
 const ProfileMenu = ({ menuRef, openMenu, setOpenMenu, onEdit }) => (
   <div className="flex justify-end gap-4 mb-4" ref={menuRef}>
