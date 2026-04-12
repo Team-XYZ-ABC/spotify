@@ -17,27 +17,29 @@
 
 @font-face {
   font-family: SpotifyLight;
-  src: url(/fonts/SpotifyMixUITitleVariable-08bab3354d40f74e5177917b5ae80894.woff2) format("woff2");
+  src: url(/fonts/SpotifyMixUITitleVariable-08bab3354d40f74e5177917b5ae80894.woff2)
+    format("woff2");
 }
 
 @font-face {
   font-family: SpotifyMix;
-  src: url(/fonts/SpotifyMixUI-Bold-09c45a3a0ce9d2971e62cb26e97760fb.woff2) format("woff2");
+  src: url(/fonts/SpotifyMixUI-Bold-09c45a3a0ce9d2971e62cb26e97760fb.woff2)
+    format("woff2");
 }
 
 body {
   font-family: SpotifyRegular, sans-serif;
 }
 
-.bg-primary{
+.bg-primary {
   background-color: #111111;
 }
 
-.font-mix{
+.font-mix {
   font-family: SpotifyMix;
 }
 
-.font-light{
+.font-light {
   font-family: SpotifyLight, sans-serif;
 }
 
@@ -58,6 +60,17 @@ body {
 }
 
 .no-scrollbar {
-  -ms-overflow-style: none;  
-  scrollbar-width: none;     
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
