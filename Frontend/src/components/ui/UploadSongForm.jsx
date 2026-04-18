@@ -5,32 +5,35 @@ import FileUploader from "../common/FileUploader";
 import Dropdown from "../common/Dropdown";
 import ConfirmationDialog from "./ConfirmationDialog";
 import { COUNTRIES, GENRES, LANGUAGES } from "../../data/DropDownSuggestions";
+import { useTrack } from "../../hooks/useTrack"; 
+
+const initialState = {
+    title: "",
+    artists: "",
+    album: "",
+    genre: "",
+    language: "",
+    isExplicit: false,
+    copyrightOwner: "",
+    isrc: "",
+    countries: [],
+    releaseDate: "",
+    recordLabel: "",
+    composer: "",
+    producer: "",
+    coverImage: null,
+    file: null,
+};
 
 const UploadSongForm = ({ isOpen, onClose }) => {
-    const [formData, setFormData] = useState({
-        title: "",
-        artists: "",
-        album: "",
-        genre: "",
-        language: "",
-        isExplicit: false,
-        copyrightOwner: "",
-        isrc: "",
-        countries: [],
-        releaseDate: "",
-        recordLabel: "",
-        composer: "",
-        producer: "",
-        coverImage: null,
-        file: null,
-    });
-
+    const [formData, setFormData] = useState(initialState);
     const [coverPreview, setCoverPreview] = useState(null);
     const [audioFileName, setAudioFileName] = useState("");
     const [audioFileSize, setAudioFileSize] = useState("");
-    const [isUploading, setIsUploading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
     const [showConfirmation, setShowConfirmation] = useState(false);
+
+    const { uploadTrack, loading, error } = useTrack();
 
     const hasUnsavedChanges = () => {
         return (
@@ -40,11 +43,7 @@ const UploadSongForm = ({ isOpen, onClose }) => {
             formData.genre ||
             formData.language ||
             formData.coverImage ||
-            formData.file ||
-            formData.releaseDate ||
-            formData.recordLabel ||
-            formData.composer ||
-            formData.producer
+            formData.file
         );
     };
 
@@ -58,23 +57,7 @@ const UploadSongForm = ({ isOpen, onClose }) => {
 
     const handleConfirmDiscard = () => {
         setShowConfirmation(false);
-        setFormData({
-            title: "",
-            artists: "",
-            album: "",
-            genre: "",
-            language: "",
-            isExplicit: false,
-            copyrightOwner: "",
-            isrc: "",
-            countries: [],
-            releaseDate: "",
-            recordLabel: "",
-            composer: "",
-            producer: "",
-            coverImage: null,
-            file: null,
-        });
+        setFormData(initialState);
         setCoverPreview(null);
         setAudioFileName("");
         setAudioFileSize("");
@@ -91,6 +74,10 @@ const UploadSongForm = ({ isOpen, onClose }) => {
             setCoverPreview(null);
         }
     }, [formData.coverImage]);
+
+    useEffect(() => {
+        if (error) setErrorMsg(error);
+    }, [error]);
 
     const handleAudioFileChange = (file) => {
         if (file) {
@@ -126,54 +113,21 @@ const UploadSongForm = ({ isOpen, onClose }) => {
             return;
         }
 
-        setIsUploading(true);
-        setErrorMsg("");
+        try {
+            setErrorMsg("");
 
-        const data = new FormData();
-        data.append("file", formData.file);
-        data.append("title", formData.title);
-        data.append(
-            "artists",
-            JSON.stringify(formData.artists.split(",").map((a) => a.trim())),
-        );
-        data.append("album", formData.album);
-        data.append("genre", formData.genre);
-        data.append("language", formData.language);
-        data.append("isExplicit", formData.isExplicit);
-        data.append("copyrightOwner", formData.copyrightOwner);
-        data.append("isrc", formData.isrc);
-        data.append("countries", JSON.stringify(formData.countries));
-        data.append("releaseDate", formData.releaseDate);
-        data.append("recordLabel", formData.recordLabel);
-        data.append("composer", formData.composer);
-        data.append("producer", formData.producer);
+            await uploadTrack(formData); 
 
-        console.log("Submitting:", formData);
-        await new Promise((resolve) => setTimeout(resolve, 800));
+            setFormData(initialState);
+            setCoverPreview(null);
+            setAudioFileName("");
+            setAudioFileSize("");
 
-        setIsUploading(false);
-        setFormData({
-            title: "",
-            artists: "",
-            album: "",
-            genre: "",
-            language: "",
-            isExplicit: false,
-            copyrightOwner: "",
-            isrc: "",
-            countries: [],
-            releaseDate: "",
-            recordLabel: "",
-            composer: "",
-            producer: "",
-            coverImage: null,
-            file: null,
-        });
-        setCoverPreview(null);
-        setAudioFileName("");
-        setAudioFileSize("");
-        setErrorMsg("");
-        onClose(false);
+            onClose(false);
+
+        } catch (err) {
+            setErrorMsg(err.message || "Upload failed");
+        }
     };
 
     useEffect(() => {
@@ -260,7 +214,7 @@ const UploadSongForm = ({ isOpen, onClose }) => {
                                         required
                                     />
                                     <Input
-                                        label="Primary Artist(s)"
+                                        label="Artist(s)"
                                         value={formData.artists}
                                         onChange={(v) =>
                                             handleChange("artists", v)}
@@ -442,14 +396,14 @@ const UploadSongForm = ({ isOpen, onClose }) => {
                         </button>
                         <button
                             onClick={handleSubmit}
-                            disabled={isUploading}
+                            disabled={loading}
                             className={`px-6 md:px-8 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold bg-linear-to-r from-[#1DB954] to-[#1ed760] text-black flex items-center gap-2 ${
-                                isUploading
+                                loading
                                     ? "opacity-60 cursor-not-allowed"
                                     : "hover:from-[#1ed760] hover:to-[#22ff64] shadow-lg"
                             }`}
                         >
-                            {isUploading
+                            {loading
                                 ? (
                                     <>
                                         <svg

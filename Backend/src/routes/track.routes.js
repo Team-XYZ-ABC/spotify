@@ -31,10 +31,15 @@ trackRouter.get("/:trackId/credits", getTrackCredits);
 
 trackRouter.get("/:trackId/recommendations", getTrackRecommendations);
 
-trackRouter.post("/artist/upload/track", isAuthenticated, authRole(["artist"]),  upload.single("file"), uploadTrack);
+trackRouter.post("/artist/upload/track", isAuthenticated, authRole(["artist"]), upload.fields([
+  { name: "file", maxCount: 1 },
+  { name: "coverImage", maxCount: 1 }
+]), uploadTrack);
 
-trackRouter.patch("/artist/:trackId", isAuthenticated, authRole(["artist"]),  updateTrack);
+trackRouter.patch("/artist/:trackId", isAuthenticated, authRole(["artist"]),upload.fields([
+    { name: "coverImage", maxCount: 1 }
+  ]), updateTrack);
 
-trackRouter.delete("/artist/:trackId", isAuthenticated , authRole(["artist"]),  deleteTrack);
+trackRouter.delete("/artist/:trackId", isAuthenticated, authRole(["artist"]), deleteTrack);
 
 export default trackRouter;
