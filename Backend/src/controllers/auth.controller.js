@@ -230,7 +230,7 @@ export const getCurrentUser = async (req, res) => {
 
         const decoded = jwtVerify(token);
         const user = await UserModel.findById(decoded.id)
-            .select("_id username role isActive");
+            .select("_id username role isActive avatar");
 
         if (!user) {
             return res.status(404).json({
@@ -249,7 +249,8 @@ export const getCurrentUser = async (req, res) => {
             user: {
                 id: user._id,
                 username: user.username,
-                role: user.role
+                role: user.role,
+                avatar: user.avatar
             }
         });
 

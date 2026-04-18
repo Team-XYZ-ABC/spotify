@@ -1,3 +1,5 @@
+// hooks/useProfile.js
+
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 
@@ -11,13 +13,20 @@ import {
 
 import {
   getProfileService,
-  otherUserPofileService,
+  otherUserProfileService,
   updateProfileService,
 } from "../services/profile.service";
 
+/**
+ * Profile Hook
+ * Handles all profile-related business logic
+ */
 export const useProfile = () => {
   const dispatch = useDispatch();
 
+  /**
+   * Fetch logged-in user profile
+   */
   const getProfile = useCallback(async () => {
     try {
       dispatch(setLoading(true));
@@ -28,9 +37,7 @@ export const useProfile = () => {
     } catch (err) {
       dispatch(
         setError(
-          err?.response?.data?.message ||
-          err?.message ||
-          "Failed to fetch profile"
+          err?.message || "Failed to fetch profile"
         )
       );
     } finally {
@@ -38,14 +45,18 @@ export const useProfile = () => {
     }
   }, [dispatch]);
 
+  /**
+   * Update user profile
+   */
   const updateProfile = useCallback(
     async (data) => {
       try {
         dispatch(setLoading(true));
 
         const res = await updateProfileService(data);
-        // Services return the response body directly, so normalize the updated user here.
-        const updatedUser = res?.user || res?.data?.user || res?.data;
+
+        const updatedUser =
+          res?.user || res?.data?.user || res?.data;
 
         dispatch(updateProfileSuccess(updatedUser));
 
@@ -55,9 +66,7 @@ export const useProfile = () => {
         };
       } catch (err) {
         const message =
-          err?.response?.data?.message ||
-          err?.message ||
-          "Failed to update profile";
+          err?.message || "Failed to update profile";
 
         dispatch(setError(message));
 
@@ -72,21 +81,20 @@ export const useProfile = () => {
     [dispatch]
   );
 
+  /**
+   * Fetch other user's profile
+   */
   const getOtherUser = useCallback(
     async (id) => {
       try {
         dispatch(setLoading(true));
 
-        const res =
-          await otherUserPofileService(id);
+        const res = await otherUserProfileService(id);
 
-        dispatch(
-          setOtherUser(res?.data || res)
-        );
+        dispatch(setOtherUser(res?.data || res));
       } catch (err) {
         dispatch(
           setError(
-            err?.response?.data?.message ||
             err?.message ||
             "Failed to fetch user profile"
           )

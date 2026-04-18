@@ -63,7 +63,6 @@ export const getTrackRecommendations = (req, res) => {
   res.send("GET TRACK RECOMMENDATIONS");
 };
 
-
 export const uploadTrack = async (req, res) => {
   try {
     const audioFile = req.files?.file?.[0];
@@ -152,7 +151,6 @@ export const uploadTrack = async (req, res) => {
   }
 };
 
-
 export const updateTrack = async (req, res) => {
   try {
     const { trackId } = req.params;
@@ -239,7 +237,6 @@ export const updateTrack = async (req, res) => {
     });
   }
 };
-
 
 export const deleteTrack = async (req, res) => {
   try {

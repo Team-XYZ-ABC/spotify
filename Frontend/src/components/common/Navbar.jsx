@@ -5,8 +5,9 @@ import { useSelector } from "react-redux";
 
 const Navbar = ({ toggleSidebar }) => {
   const [showProfile, setShowProfile] = useState(false);
-  const user = useSelector((state) => state.profile.profile);
+  const user = useSelector((state) => state.user.user);
   const [search, setSearch] = useState("");
+  console.log(user)
 
   const handleSearch = (e) => {
     if (e.key === "Enter") {

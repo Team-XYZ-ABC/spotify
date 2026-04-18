@@ -1,5 +1,11 @@
+// redux/slices/profile.slice.js
+
 import { createSlice } from "@reduxjs/toolkit";
 
+/**
+ * Profile Slice
+ * Handles user + artist state
+ */
 const profileSlice = createSlice({
     name: "profile",
 
@@ -8,14 +14,20 @@ const profileSlice = createSlice({
         otherUser: null,
         artist: null,
         loading: false,
-        error: null
+        error: null,
     },
 
     reducers: {
+        /**
+         * Toggle loading state
+         */
         setLoading: (state, action) => {
             state.loading = action.payload;
         },
 
+        /**
+         * Set logged-in user profile
+         */
         setProfile: (state, action) => {
             state.profile = action.payload.user;
             state.artist = action.payload.artist || null;
@@ -23,27 +35,39 @@ const profileSlice = createSlice({
             state.error = null;
         },
 
+        /**
+         * Set other user's profile
+         */
         setOtherUser: (state, action) => {
             state.otherUser = action.payload.user;
             state.artist = action.payload.artist || null;
             state.loading = false;
         },
 
+        /**
+         * Update current user profile
+         */
         updateProfileSuccess: (state, action) => {
             state.profile = action.payload;
             state.loading = false;
         },
 
+        /**
+         * Set error state
+         */
         setError: (state, action) => {
             state.error = action.payload;
             state.loading = false;
         },
 
+        /**
+         * Clear profile (logout use-case)
+         */
         clearProfile: (state) => {
             state.profile = null;
             state.artist = null;
-        }
-    }
+        },
+    },
 });
 
 export const {
@@ -52,7 +76,7 @@ export const {
     setOtherUser,
     updateProfileSuccess,
     setError,
-    clearProfile
+    clearProfile,
 } = profileSlice.actions;
 
 export default profileSlice.reducer;
