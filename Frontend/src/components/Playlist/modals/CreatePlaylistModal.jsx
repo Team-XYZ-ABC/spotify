@@ -36,7 +36,7 @@ const CreatePlaylistModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
                     <h2 className="text-xl font-bold">Create playlist</h2>
                     <button
                         onClick={onClose}
-                        className="rounded-full p-2 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+                        className="rounded-full w-10 h-10 text-zinc-400 transition hover:bg-white/10 hover:text-white"
                     >
                         <i className="ri-close-line text-xl"></i>
                     </button>
