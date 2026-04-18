@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router";
 import UserMenuCard from "../ui/UserMenuCard";
+import { useSelector } from "react-redux";
 
 const Navbar = ({ toggleSidebar }) => {
   const [showProfile, setShowProfile] = useState(false);
+  const user = useSelector((state) => state.profile.profile);
   const [search, setSearch] = useState("");
 
   const handleSearch = (e) => {
@@ -74,9 +76,16 @@ const Navbar = ({ toggleSidebar }) => {
         <div className="relative">
           <div
             onClick={() => setShowProfile(!showProfile)}
-            className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center rounded-full bg-orange-500 font-semibold cursor-pointer text-sm md:text-base"
+            className="h-9 w-9 md:h-10 md:w-10 flex items-center overflow-hidden justify-center rounded-full bg-zinc-800 font-semibold cursor-pointer text-sm md:text-base"
           >
-            Z
+            {user?.avatar
+              ? (
+                <img
+                  className="h-full w-full object-cover"
+                  src={user?.avatar}
+                />
+              )
+              : <h1 className="">{user?.username.toUpperCase()[0]}</h1>}
           </div>
 
           {showProfile && <UserMenuCard setShowProfile={setShowProfile} />}
