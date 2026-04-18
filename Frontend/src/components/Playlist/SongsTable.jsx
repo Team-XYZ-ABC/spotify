@@ -80,7 +80,7 @@ const SongsTable = ({ songs, onRemoveTrack, canModifyTracks, onReorder }) => {
                         <button
                             onClick={() => onRemoveTrack(song.id)}
                             disabled={!canModifyTracks}
-                            className="text-zinc-500 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                            className="text-zinc-500 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-40"
                             aria-label={`Remove ${song.title}`}
                         >
                             <i className="ri-delete-bin-7-line"></i>

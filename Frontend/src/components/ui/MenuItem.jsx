@@ -4,17 +4,17 @@ const MenuItem = ({ isArtist, icon, text, external, path, setShowProfile, onClic
     return (
         <>
             {isArtist ? (
-                <a
+                <Link
                     className="flex items-center justify-between px-3 py-3 md:py-2 
         rounded-md transition hover:bg-[#2a2a2a]"
-                    href={path}
+                    to={path}
                     target="_blank"
                 >
                     <div className="flex items-center gap-3">
                         <i className={`${icon} text-lg`}></i>
                         <span className="text-sm md:text-sm">{text}</span>
                     </div>
-                </a>
+                </Link>
             ) : (
                 <Link
                     to={path || "#"}

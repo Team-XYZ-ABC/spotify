@@ -10,19 +10,29 @@ const MobileSongsList = ({ songs, onRemoveTrack, canModifyTracks }) => {
           className="flex items-center justify-between gap-3 rounded-2xl bg-[#151515] px-4 py-3"
         >
           <div className="flex min-w-0 items-center gap-4">
-            <img
-              src={song.image}
-              alt={song.title}
-              className="h-16 w-16 sm:h-20 sm:w-20 rounded object-cover"
-            />
+
+            {/* ✅ SAFE IMAGE RENDER */}
+            {song?.image ? (
+              <img
+                src={song.image}
+                alt={song.title}
+                className="h-16 w-16 sm:h-20 sm:w-20 rounded object-cover"
+              />
+            ) : (
+              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded bg-zinc-800 flex items-center justify-center text-zinc-500 text-xl">
+                <i className="ri-music-2-line"></i>
+              </div>
+            )}
 
             <div className="min-w-0">
               <h3 className="truncate text-base sm:text-xl font-medium">
                 {song.title}
               </h3>
+
               <p className="truncate text-gray-400 text-sm sm:text-base">
                 {song.artist}
               </p>
+
               <div className="mt-1 flex items-center gap-2 text-xs sm:text-sm text-zinc-500">
                 <span>{formatAddedLabel(song.addedAt)}</span>
                 <span>•</span>

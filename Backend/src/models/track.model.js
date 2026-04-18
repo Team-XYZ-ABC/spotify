@@ -62,9 +62,10 @@ const trackSchema = new mongoose.Schema(
         // List of all contributing artists (features, collaborations)
         artists: [
             {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Artist",
-                required: true,
+                // type: mongoose.Schema.Types.ObjectId,
+                // ref: "Artist",
+                type: String,
+                required: true
             },
         ],
 
