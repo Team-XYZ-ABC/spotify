@@ -66,7 +66,9 @@ export const getTrackRecommendations = (req, res) => {
 
 export const uploadTrack = async (req, res) => {
   try {
-    const file = req.file;
+    const audioFile = req.files?.file?.[0];
+    const coverImageFile = req.files?.coverImage?.[0];
+    const file = audioFile;
 
     const {
       title,
@@ -100,6 +102,18 @@ export const uploadTrack = async (req, res) => {
       "uploads/track"
     );
 
+    let coverImageUrl = null;
+
+    if (coverImageFile) {
+      const coverResult = await uploadFile(
+        coverImageFile.buffer,
+        coverImageFile.originalname,
+        "uploads/covers"
+      );
+
+      coverImageUrl = coverResult.url;
+    }
+
     const track = await TrackModel.create({
       title,
       duration: result.duration,
@@ -123,7 +137,7 @@ export const uploadTrack = async (req, res) => {
         ? JSON.parse(availableCountries)
         : [],
 
-      coverImage: coverImage || null,
+      coverImage: coverImageUrl,
     });
 
     res.status(201).json({
@@ -142,6 +156,7 @@ export const uploadTrack = async (req, res) => {
 export const updateTrack = async (req, res) => {
   try {
     const { trackId } = req.params;
+    const coverImageFile = req.files?.coverImage?.[0];
 
     const {
       title,
@@ -170,6 +185,18 @@ export const updateTrack = async (req, res) => {
       });
     }
 
+    let coverImageUrl;
+
+    if (coverImageFile) {
+      const coverResult = await uploadFile(
+        coverImageFile.buffer,
+        coverImageFile.originalname,
+        "uploads/covers"
+      );
+
+      coverImageUrl = coverResult.url;
+    }
+
     const updateData = {};
 
     if (title) updateData.title = title;
@@ -192,8 +219,9 @@ export const updateTrack = async (req, res) => {
     if (availableCountries)
       updateData.availableCountries = JSON.parse(availableCountries);
 
-    if (coverImage) updateData.coverImage = coverImage;
-
+    if (coverImageFile) {
+      updateData.coverImage = coverImageUrl;
+    }
     const updatedTrack = await TrackModel.findByIdAndUpdate(
       trackId,
       updateData,
