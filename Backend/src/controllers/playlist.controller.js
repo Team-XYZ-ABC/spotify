@@ -584,29 +584,67 @@ export const removeCollaborator = async (req, res) => {
 
 
 
+/**
+ * Add a track to a playlist
+ *
+ * Access Control:
+ * - Owner or collaborators can add tracks (handled via middleware)
+ *
+ * Business Rules:
+ * - trackId is required
+ * - Track must exist in DB
+ * - Duplicate tracks are not allowed
+ * - Maximum 100 tracks allowed per playlist
+ *
+ * Flow:
+ * 1. Validate input
+ * 2. Enforce track limit
+ * 3. Check track existence
+ * 4. Prevent duplicates
+ * 5. Add track with metadata (addedBy, addedAt)
+ * 6. Save and return updated playlist
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 export const addTrackToPlaylist = async (req, res) => {
   try {
     const { trackId } = req.body;
     const playlist = req.playlist;
 
     if (!trackId) {
-      return res.status(400).json({ message: "trackId is required" });
+      return res.status(400).json({
+        message: "trackId is required",
+      });
+    }
+
+    // enforce max track limit
+    if ((playlist.tracks || []).length >= 100) {
+      return res.status(400).json({
+        message: "Maximum 100 tracks allowed in a playlist",
+      });
     }
 
     const track = await TrackModel.findById(trackId).select("_id");
 
     if (!track) {
-      return res.status(404).json({ message: "Track not found" });
+      return res.status(404).json({
+        message: "Track not found",
+      });
     }
 
+    // prevent duplicate tracks
     const alreadyExists = (playlist.tracks || []).some(
-      (playlistTrack) => String(playlistTrack.track) === String(trackId)
+      (t) => String(t.track) === String(trackId)
     );
 
     if (alreadyExists) {
-      return res.status(400).json({ message: "Track already exists in playlist" });
+      return res.status(400).json({
+        message: "Track already exists in playlist",
+      });
     }
 
+    // add track with metadata
     playlist.tracks.push({
       track: track._id,
       addedBy: req.user.id,
@@ -615,43 +653,81 @@ export const addTrackToPlaylist = async (req, res) => {
 
     await playlist.save();
 
-    const updated = await PlaylistModel.findById(playlist._id).populate(playlistPopulate);
+    const updated = await PlaylistModel.findById(playlist._id)
+      .populate(playlistPopulate);
 
     return res.status(200).json({
       message: "Track added to playlist",
       playlist: mapPlaylist(updated, req.user.id),
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
 
+
+
+
+/**
+ * Remove a track from a playlist
+ *
+ * Access Control:
+ * - Owner or collaborators can remove tracks (handled via middleware)
+ *
+ * Business Rules:
+ * - Track must exist in playlist
+ *
+ * Flow:
+ * 1. Get trackId from params
+ * 2. Filter out the track from playlist
+ * 3. If no change → track not found
+ * 4. Save updated playlist
+ * 5. Return updated playlist
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 export const removeTrackFromPlaylist = async (req, res) => {
   try {
     const { trackId } = req.params;
     const playlist = req.playlist;
 
     const beforeCount = playlist.tracks.length;
+
+    // remove track from playlist
     playlist.tracks = playlist.tracks.filter(
-      (playlistTrack) => String(playlistTrack.track) !== String(trackId)
+      (t) => String(t.track) !== String(trackId)
     );
 
+    // if no track removed → not found
     if (beforeCount === playlist.tracks.length) {
-      return res.status(404).json({ message: "Track not found in playlist" });
+      return res.status(404).json({
+        message: "Track not found in playlist",
+      });
     }
 
     await playlist.save();
 
-    const updated = await PlaylistModel.findById(playlist._id).populate(playlistPopulate);
+    const updated = await PlaylistModel.findById(playlist._id)
+      .populate(playlistPopulate);
 
     return res.status(200).json({
       message: "Track removed from playlist",
       playlist: mapPlaylist(updated, req.user.id),
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
+
+
+
 
 export const reorderPlaylistTracks = async (req, res) => {
   try {
@@ -699,6 +775,9 @@ export const reorderPlaylistTracks = async (req, res) => {
     return res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
+
+
 
 export const searchUsersForCollaborators = async (req, res) => {
   try {
@@ -783,19 +862,51 @@ export const searchTracksForPlaylist = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
+/**
+ * Fetch all playlists accessible to the current user
+ *
+ * Access Rules:
+ * - User can see playlists where:
+ *   1. They are the owner
+ *   2. They are a collaborator
+ *
+ * Flow:
+ * 1. Query playlists by owner or collaborator
+ * 2. Sort by last updated (recent first)
+ * 3. Populate related data (tracks, users)
+ * 4. Map playlists to response format
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 export const getUserPlaylists = async (req, res) => {
   try {
     const userId = req.user.id;
+
     const playlists = await PlaylistModel.find({
-      $or: [{ owner: userId }, { collaborators: userId }],
+      $or: [
+        { owner: userId },
+        { collaborators: userId },
+      ],
     })
-      .sort({ updatedAt: -1 })
+      .sort({ updatedAt: -1 }) // latest first
       .populate(playlistPopulate);
 
     return res.status(200).json({
-      playlists: playlists.map((playlist) => mapPlaylist(playlist, userId)),
+      playlists: playlists.map((playlist) =>
+        mapPlaylist(playlist, userId)
+      ),
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
