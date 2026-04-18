@@ -18,7 +18,6 @@ export const getTrack = async (req, res) => {
     }
 
     const track = await TrackModel.findById(trackId)
-      .populate("primaryArtist", "name")
       .populate("artists", "name")
       .populate("album", "title");
 
