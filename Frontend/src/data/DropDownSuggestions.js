@@ -1,0 +1,48 @@
+export const COUNTRIES = [
+    { value: "US", label: "United States" },
+    { value: "GB", label: "United Kingdom" },
+    { value: "CA", label: "Canada" },
+    { value: "AU", label: "Australia" },
+    { value: "DE", label: "Germany" },
+    { value: "FR", label: "France" },
+    { value: "JP", label: "Japan" },
+    { value: "IN", label: "India" },
+    { value: "BR", label: "Brazil" },
+    { value: "MX", label: "Mexico" },
+    { value: "ES", label: "Spain" },
+    { value: "IT", label: "Italy" },
+    { value: "KR", label: "South Korea" },
+    { value: "NL", label: "Netherlands" },
+    { value: "SE", label: "Sweden" },
+    { value: "CH", label: "Switzerland" },
+];
+
+export const LANGUAGES = [
+    { value: "en", label: "English" },
+    { value: "es", label: "Spanish" },
+    { value: "fr", label: "French" },
+    { value: "de", label: "German" },
+    { value: "it", label: "Italian" },
+    { value: "pt", label: "Portuguese" },
+    { value: "ja", label: "Japanese" },
+    { value: "ko", label: "Korean" },
+    { value: "zh", label: "Chinese" },
+    { value: "ru", label: "Russian" },
+    { value: "hi", label: "Hindi" },
+    { value: "ar", label: "Arabic" },
+];
+
+export const GENRES = [
+    { value: "electronic", label: "Electronic" },
+    { value: "pop", label: "Pop" },
+    { value: "hiphop", label: "Hip-Hop" },
+    { value: "rock", label: "Rock" },
+    { value: "jazz", label: "Jazz" },
+    { value: "classical", label: "Classical" },
+    { value: "rnb", label: "R&B" },
+    { value: "indie", label: "Indie" },
+    { value: "country", label: "Country" },
+    { value: "metal", label: "Metal" },
+    { value: "folk", label: "Folk" },
+    { value: "ambient", label: "Ambient" },
+];
