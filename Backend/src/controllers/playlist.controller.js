@@ -505,6 +505,7 @@ export const addCollaborators = async (req, res) => {
         },
       },
       { $project: { _id: 1 } },
+      
     ]);
 
     const validIds = validUsers.map((u) => String(u._id));
@@ -537,7 +538,10 @@ export const addCollaborators = async (req, res) => {
           },
         },
       ],
-      { new: true }
+      { new: true,
+        updatePipeline: true
+      }
+      
     ).populate(playlistPopulate);
 
     return res.status(200).json({
@@ -778,7 +782,19 @@ export const reorderPlaylistTracks = async (req, res) => {
 
 
 
-
+/**
+ * Search users for collaborators using MongoDB Atlas Search
+ *
+ * Features:
+ * - Autocomplete on username (fast typing search)
+ * - Exact/normal search on email
+ * - Fuzzy (typo-tolerant) search on displayName
+ * - Excludes current user
+ * - Returns top 10 relevant users (ranked)
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 export const searchUsersForCollaborators = async (req, res) => {
   try {
     const query = String(req.query.q || "").trim();
@@ -787,14 +803,72 @@ export const searchUsersForCollaborators = async (req, res) => {
       return res.status(200).json({ users: [] });
     }
 
-    const regex = new RegExp(query, "i");
-    const users = await UserModel.find({
-      _id: { $ne: req.user.id },
-      $or: [{ username: regex }, { email: regex }, { displayName: regex }],
-    })
-      .select("_id username email displayName avatar")
-      .limit(10)
-      .lean();
+    const users = await UserModel.aggregate([
+      {
+        $search: {
+          index: "user_search_by_displayname_username_email",
+          compound: {
+            should: [
+              // Highest priority → username autocomplete
+              {
+                autocomplete: {
+                  query,
+                  path: "username",
+                  score: { boost: { value: 5 } }
+                }
+              },
+
+              // 🔹 Medium priority → email search
+              {
+                text: {
+                  query,
+                  path: "email",
+                  score: { boost: { value: 3 } }
+                }
+              },
+
+              // Flexible → displayName with typo tolerance
+              {
+                text: {
+                  query,
+                  path: "displayName",
+                  fuzzy: { maxEdits: 2 },
+                  score: { boost: { value: 2 } }
+                }
+              }
+            ]
+          }
+        }
+      },
+
+      // exclude current user
+      {
+        $match: {
+          _id: { $ne: req.user._id }
+        }
+      },
+
+      // add relevance score (optional but useful)
+      {
+        $addFields: {
+          score: { $meta: "searchScore" }
+        }
+      },
+
+      // top results only
+      { $limit: 10 },
+
+      // return only required fields
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          email: 1,
+          displayName: 1,
+          avatar: 1
+        }
+      }
+    ]);
 
     return res.status(200).json({
       users: users.map((user) => ({
@@ -805,10 +879,15 @@ export const searchUsersForCollaborators = async (req, res) => {
         avatar: user.avatar || "",
       })),
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
+
+
 
 export const searchTracksForPlaylist = async (req, res) => {
   try {
