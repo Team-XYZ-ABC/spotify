@@ -6,18 +6,11 @@ const EditProfileModal = ({
   name,
   setName,
   profileImg,
-  setProfileImg,
-  handleNameSave
+  onImageChange,
+  onSave,
+  isSaving = false,
 }) => {
   const fileInputRef = useRef(null);
-
-  const handleImageChange = (e) => {
-  const file = e.target.files[0];
-
-  if (file) {
-    setProfileImg(URL.createObjectURL(file)); 
-  }
-};
 
   if (!isOpen) return null;
 
@@ -53,23 +46,25 @@ const EditProfileModal = ({
         <input
           type="file"
           ref={fileInputRef}
-          onChange={handleImageChange}
+          onChange={onImageChange}
           className="hidden"
+          accept="image/*"
         />
 
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 rounded bg-[#2a2a2a] outline-none mb-4"
+          className="w-full p-2 rounded bg-[#080606] outline-none mb-4"
           placeholder="Enter name"
         />
 
         <button
-          onClick={handleNameSave}
+          onClick={onSave}
+          disabled={isSaving}
           className="w-full bg-white text-black py-2 rounded font-semibold hover:scale-105 transition"
         >
-          Save
+          {isSaving ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

@@ -1,10 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
+import { formatAddedLabel } from "../../utils/playlist";
 
-const SongsTable = ({ songs }) => {
+const SongsTable = ({ songs, onRemoveTrack, canModifyTracks, onReorder }) => {
+    const [dragIndex, setDragIndex] = useState(null);
+
+    const handleDrop = async (dropIndex) => {
+        if (dragIndex === null || dragIndex === dropIndex || !canModifyTracks) {
+            setDragIndex(null);
+            return;
+        }
+
+        await onReorder(dragIndex, dropIndex);
+        setDragIndex(null);
+    };
+
     return (
-        <div className="px-8 pb-10">
+        <div className="px-6 lg:px-8 pb-10">
             {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-zinc-800 text-gray-400 text-sm">
+            <div className="grid grid-cols-12 gap-4 px-4 lg:px-6 py-4 border-b border-zinc-800 text-gray-400 text-sm">
                 <div className="col-span-1">#</div>
                 <div className="col-span-5">Title</div>
                 <div className="col-span-3">Album</div>
@@ -18,34 +31,48 @@ const SongsTable = ({ songs }) => {
             {songs.map((song, index) => (
                 <div
                     key={song.id}
-                    className="grid grid-cols-12 gap-4 px-6 py-3 items-center hover:bg-[#1a1a1a] rounded-md transition"
+                    draggable={canModifyTracks}
+                    onDragStart={() => setDragIndex(index)}
+                    onDragOver={(event) => {
+                        if (canModifyTracks) event.preventDefault();
+                    }}
+                    onDrop={() => handleDrop(index)}
+                    className="grid grid-cols-12 gap-4 px-4 lg:px-6 py-3 items-center rounded-md transition hover:bg-[#1a1a1a]"
                 >
                     <div className="col-span-1 text-gray-400 text-lg">
                         {index + 1}
                     </div>
 
-                    <div className="col-span-5 flex items-center gap-4">
+                    <div className="col-span-5 flex items-center gap-4 min-w-0">
                         <img
                             src={song.image}
                             alt={song.title}
                             className="w-14 h-14 rounded object-cover"
                         />
-                        <div>
-                            <h3 className="text-lg font-medium">{song.title}</h3>
-                            <p className="text-sm text-gray-400">{song.artist}</p>
+                        <div className="min-w-0">
+                            <h3 className="truncate text-base lg:text-lg font-medium">{song.title}</h3>
+                            <p className="truncate text-sm text-gray-400">{song.artist}</p>
                         </div>
                     </div>
 
-                    <div className="col-span-3 text-gray-300 text-base">
+                    <div className="col-span-3 truncate text-gray-300 text-base">
                         {song.album}
                     </div>
 
                     <div className="col-span-2 text-gray-400 text-base">
-                        2 minutes ago
+                        {formatAddedLabel(song.addedAt)}
                     </div>
 
-                    <div className="col-span-1 text-right text-gray-300 text-base">
-                        {song.duration}
+                    <div className="col-span-1 flex items-center justify-end gap-3 text-gray-300 text-base">
+                        <span>{song.duration}</span>
+                        <button
+                            onClick={() => onRemoveTrack(song.id)}
+                            disabled={!canModifyTracks}
+                            className="text-zinc-500 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                            aria-label={`Remove ${song.title}`}
+                        >
+                            <i className="ri-delete-bin-7-line"></i>
+                        </button>
                     </div>
                 </div>
             ))}
