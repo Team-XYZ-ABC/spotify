@@ -63,7 +63,7 @@ const trackSchema = new mongoose.Schema(
         artists: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Artists",
+                ref: "Artist",
                 required: true,
             },
         ],
@@ -71,7 +71,7 @@ const trackSchema = new mongoose.Schema(
         // Primary/main artist (used for ownership & filtering)
         primaryArtist: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Artists",
+            ref: "Artist",
             required: true,
         },
 
