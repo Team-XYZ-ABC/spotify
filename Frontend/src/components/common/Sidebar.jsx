@@ -132,7 +132,7 @@ const Sidebar = ({
                     <button
                       key={playlist.id}
                       onClick={() => handlePlaylistOpen(playlist.id)}
-                      className={`w-full flex items-center gap-3 rounded-md px-3 py-2 text-left transition-colors ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#1a1a1a]"
+                      className={`w-full flex items-center gap-3 rounded-md px-3 py-2 cursor-pointer text-left transition-colors ${isActive ? "bg-[#2a2a2a]" : "hover:bg-[#1a1a1a]"
                         }`}
                     >
                       <div
