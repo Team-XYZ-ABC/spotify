@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
+import { clearCollaboratorSearch } from "../../../redux/slices/playlist.slice";
 
 const MAX_COLLABORATORS = 10;
 
@@ -15,9 +17,14 @@ const CollaboratorManagementModal = ({
 }) => {
     const [query, setQuery] = useState("");
     const [selectedIds, setSelectedIds] = useState([]);
+    const dispatch = useDispatch()
 
     useEffect(() => {
         if (!isOpen) return;
+        if(!query) {
+            dispatch(clearCollaboratorSearch())
+            return;
+        } 
 
         const timeout = setTimeout(() => {
             onSearch(query.trim());
@@ -51,6 +58,7 @@ const CollaboratorManagementModal = ({
         if (selectedIds.length === 0) return;
         await onAddCollaborators(selectedIds);
         setSelectedIds([]);
+        setQuery("")
     };
 
     return (
@@ -60,7 +68,7 @@ const CollaboratorManagementModal = ({
                     <h2 className="text-xl font-bold">Manage collaborators</h2>
                     <button
                         onClick={onClose}
-                        className="rounded-full p-2 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+                        className="rounded-full w-10 h-10 text-zinc-400 transition hover:bg-white/10 hover:text-white"
                     >
                         <i className="ri-close-line text-xl"></i>
                     </button>
@@ -86,7 +94,7 @@ const CollaboratorManagementModal = ({
                                         </div>
                                         <button
                                             onClick={() => onRemoveCollaborator(user.id)}
-                                            className="rounded-full p-2 text-zinc-400 transition hover:bg-white/10 hover:text-white"
+                                            className="rounded-full w-10 h-10 text-zinc-400 transition hover:bg-white/10 hover:text-white"
                                         >
                                             <i className="ri-user-unfollow-line"></i>
                                         </button>

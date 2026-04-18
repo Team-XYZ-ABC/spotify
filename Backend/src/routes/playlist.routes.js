@@ -1,4 +1,6 @@
-import { Router } from "express";
+import {
+    Router
+} from "express";
 import isAuthenticated from "../middlewares/auth.middleware.js";
 import {
     addCollaborators,
