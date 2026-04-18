@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router";
 import { DashboardTabs } from "../../data/DashboardTabs";
+import { useSelector } from "react-redux";
 
 const DashboardSidebar = ({ isCollapsed, setIsCollapsed }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const {user} = useSelector((state) => state.user);
+  console.log(user)
 
   return (
     <>
@@ -27,7 +30,7 @@ const DashboardSidebar = ({ isCollapsed, setIsCollapsed }) => {
         className={`
     fixed top-0 left-0 z-50 h-screen
     bg-[#0f0f0f] text-white flex flex-col
-    transition-all duration-300 overflow-hidden
+     overflow-hidden
     w-full
     ${isCollapsed ? "md:w-18" : "md:w-65"}
     ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -96,14 +99,23 @@ const DashboardSidebar = ({ isCollapsed, setIsCollapsed }) => {
           ))}
         </nav>
         <div className="p-4 border-t border-zinc-800 flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center rounded-full bg-violet-900 font-semibold">
-            Z
+          <div
+            className="h-9 w-9 md:h-10 md:w-10 flex items-center overflow-hidden justify-center rounded-full bg-zinc-800 font-semibold cursor-pointer text-sm md:text-base"
+          >
+            {user?.avatar
+              ? (
+                <img
+                  className="h-full w-full object-cover"
+                  src={user?.avatar}
+                />
+              )
+              : <h1 className="">{user?.username.toUpperCase()[0]}</h1>}
           </div>
 
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Zoro</span>
-              <span className="text-xs text-zinc-400">zoro@mail.com</span>
+              <span className="text-sm font-medium">{user?.displayName}</span>
+              <span className="text-xs text-zinc-400">{user?.email}</span>
             </div>
           )}
         </div>
