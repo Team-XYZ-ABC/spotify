@@ -1,8 +1,10 @@
 import MenuItem from "./MenuItem";
 import useAuth from "../../hooks/useAuth";
+import { useSelector } from "react-redux";
 
 const UserMenuCard = ({ setShowProfile }) => {
   const { logoutUser } = useAuth();
+  const {user} = useSelector((state) => state.user);
 
   return (
     <div className="
@@ -26,7 +28,9 @@ const UserMenuCard = ({ setShowProfile }) => {
 
       <div className="flex flex-col gap-1">
         <MenuItem setShowProfile={setShowProfile} icon="ri-user-line" text="Account" path="/account" />
-        <MenuItem setShowProfile={setShowProfile} icon="ri-dashboard-horizontal-line" text="Dashboard" path="/analytics" isArtist/>
+        {user?.role == "artist" && (
+          <MenuItem setShowProfile={setShowProfile} icon="ri-dashboard-horizontal-line" text="Dashboard" path="/analytics" isArtist/>
+        )}
         <MenuItem setShowProfile={setShowProfile} icon="ri-profile-line" text="Profile" path="/profile" />
         <MenuItem setShowProfile={setShowProfile} icon="ri-vip-crown-line" text="Upgrade to Premium" external />
         <MenuItem setShowProfile={setShowProfile} icon="ri-customer-service-2-line" text="Support" external />

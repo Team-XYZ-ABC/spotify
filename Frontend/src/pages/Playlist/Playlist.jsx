@@ -318,11 +318,15 @@ const Playlist = () => {
                                     className="flex flex-col gap-4 rounded-2xl border border-white/6 bg-white/3 px-4 py-4 transition hover:border-white/12 hover:bg-white/5 sm:flex-row sm:items-center sm:justify-between"
                                 >
                                     <div className="flex min-w-0 items-center gap-4">
-                                        <img
+                                        {track?.image ? (<img
                                             src={track.image}
                                             alt={track.title}
                                             className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl object-cover"
-                                        />
+                                        />) : (
+                                            <div className="flex h-full p-4 items-center justify-center text-2xl text-zinc-500">
+                                                 <i className="ri-music-2-line"></i>
+                                            </div>
+                                        )}
 
                                         <div className="min-w-0">
                                             <h3 className="truncate text-base sm:text-lg font-semibold text-white">

@@ -44,14 +44,26 @@ const SongsTable = ({ songs, onRemoveTrack, canModifyTracks, onReorder }) => {
                     </div>
 
                     <div className="col-span-5 flex items-center gap-4 min-w-0">
-                        <img
-                            src={song.image}
-                            alt={song.title}
-                            className="w-14 h-14 rounded object-cover"
-                        />
+                        {song?.image
+                            ? (
+                                <img
+                                    src={song?.image}
+                                    alt={song.title}
+                                    className="w-14 h-14 rounded object-cover"
+                                />
+                            )
+                            : (
+                                <div className="flex h-full p-4 items-center justify-center text-2xl text-zinc-500">
+                                    <i className="ri-music-2-line"></i>
+                                </div>
+                            )}
                         <div className="min-w-0">
-                            <h3 className="truncate text-base lg:text-lg font-medium">{song.title}</h3>
-                            <p className="truncate text-sm text-gray-400">{song.artist}</p>
+                            <h3 className="truncate text-base lg:text-lg font-medium">
+                                {song.title}
+                            </h3>
+                            <p className="truncate text-sm text-gray-400">
+                                {song.artist}
+                            </p>
                         </div>
                     </div>
 

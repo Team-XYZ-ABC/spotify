@@ -91,7 +91,7 @@ export const router = createBrowserRouter([
             },
             {
                 element: (
-                    <AuthRoute isPrivate={true}>
+                    <AuthRoute isPrivate={true} roles={["artist"]}>
                         <Suspense fallback={<Loader />}>
                             <DashboardLayout />
                         </Suspense>
@@ -99,11 +99,15 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     { path: "/analytics", element: <Analytics /> },
-                    { path: "/playlists", element: <Playlists /> },
+                    { path: "/artist/playlists", element: <Playlists /> },
                     { path: "/albums", element: <Albums /> },
                     { path: "/trending", element: <Trending /> },
                     { path: "/ads-library", element: <AdsLibrary /> },
                     { path: "/uploadtrack", element: <UploadTrack /> },
+                    {
+                        path: "/unauthorized",
+                        element: <div>Access Denied 🚫</div>
+                    }
                 ],
             },
         ],
