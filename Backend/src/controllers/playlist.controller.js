@@ -5,21 +5,57 @@ import UserModel from "../models/user.model.js";
 
 const MAX_COLLABORATORS = 10;
 
+/**
+ * Format duration from seconds to "m:ss"
+ *
+ * - Ensures input is a valid non-negative number
+ * - Floors decimal values
+ * - Pads seconds to always show 2 digits
+ *
+ * @param {number} seconds - Duration in seconds
+ * @returns {string} Formatted duration (e.g., "3:05")
+ */
 const formatDuration = (seconds = 0) => {
-  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+  // normalize input (handle invalid / negative / decimal values)
+  const safeSeconds = Number.isFinite(seconds)
+    ? Math.max(0, Math.floor(seconds))
+    : 0;
+
   const minutes = Math.floor(safeSeconds / 60);
   const remain = safeSeconds % 60;
+
   return `${minutes}:${String(remain).padStart(2, "0")}`;
 };
 
+
+
+/**
+ * Transform a playlist track entry into a frontend-friendly track object
+ *
+ * Responsibilities:
+ * - Extract track data from playlist wrapper
+ * - Normalize artist names (primary + featured)
+ * - Format duration for UI
+ * - Provide safe fallback values
+ *
+ * @param {Object} playlistTrack - Playlist track wrapper (contains track + metadata)
+ * @param {Object} playlistTrack.track - Actual track document (may be populated)
+ *
+ * @returns {Object|null} Formatted track object or null if invalid
+ */
 const mapTrack = (playlistTrack) => {
   const trackDoc = playlistTrack?.track;
 
+  // guard: invalid or missing track
   if (!trackDoc || typeof trackDoc !== "object") {
     return null;
   }
 
-  const mainArtist = trackDoc.primaryArtist?.stageName || "Unknown artist";
+  // primary artist (fallback if missing)
+  const mainArtist =
+    trackDoc.primaryArtist?.stageName || "Unknown artist";
+
+  // extract featured artists (excluding primary artist)
   const featuredArtists = Array.isArray(trackDoc.artists)
     ? trackDoc.artists
       .map((artist) => artist?.stageName)
@@ -30,16 +66,39 @@ const mapTrack = (playlistTrack) => {
   return {
     id: trackDoc._id,
     title: trackDoc.title,
+
+    // combine artists into single string
     artist: [mainArtist, ...featuredArtists].join(", "),
+
     album: trackDoc.album?.title || "Single",
+
+    // formatted duration (mm:ss)
     duration: formatDuration(trackDoc.duration),
+
+    // raw duration (used for calculations)
     durationSeconds: trackDoc.duration,
+
     image: trackDoc.coverImage || "",
+
+    // playlist-specific metadata
     addedAt: playlistTrack.addedAt,
     addedBy: playlistTrack.addedBy,
   };
 };
 
+
+
+
+/**
+ * Transform a user document into a safe, frontend-friendly object
+ *
+ * - Picks only required public fields
+ * - Avoids exposing sensitive data (e.g., password, tokens)
+ * - Ensures consistent response shape
+ *
+ * @param {Object} userDoc - Raw user document (may be populated or partial)
+ * @returns {Object} Normalized user object
+ */
 const mapUser = (userDoc) => ({
   id: userDoc?._id,
   username: userDoc?.username,
@@ -48,11 +107,41 @@ const mapUser = (userDoc) => ({
   avatar: userDoc?.avatar || "",
 });
 
+
+
+
+/**
+ * Transform a playlist document into a frontend-friendly object
+ *
+ * Responsibilities:
+ * - Normalize playlist data
+ * - Transform nested relations (tracks, users)
+ * - Calculate derived values (song count, total duration)
+ * - Attach user-specific permissions
+ *
+ * @param {Object} playlistDoc - Raw playlist document from MongoDB (may be populated)
+ * @param {string|ObjectId} currentUserId - ID of the current authenticated user
+ *
+ * @returns {Object} Formatted playlist object
+ */
 const mapPlaylist = (playlistDoc, currentUserId) => {
-  const tracks = (playlistDoc.tracks || []).map(mapTrack).filter(Boolean);
+  // transform tracks and remove invalid entries
+  const tracks = (playlistDoc.tracks || [])
+    .map(mapTrack)
+    .filter(Boolean);
+
+  // calculate total duration in seconds
   const totalDurationSeconds = tracks.reduce(
     (sum, track) => sum + (track.durationSeconds || 0),
     0
+  );
+
+  // normalize owner and collaborator IDs for permission checks
+  const ownerId = String(playlistDoc.owner?._id || playlistDoc.owner);
+  const collaboratorIds = new Set(
+    (playlistDoc.collaborators || []).map((user) =>
+      String(user?._id || user)
+    )
   );
 
   return {
@@ -61,21 +150,29 @@ const mapPlaylist = (playlistDoc, currentUserId) => {
     description: playlistDoc.description,
     coverImage: playlistDoc.coverImage,
     isPublic: playlistDoc.isPublic,
-    owner: mapUser(playlistDoc.owner),
+
+    // map user-related fields
+    owner: playlistDoc.owner ? mapUser(playlistDoc.owner) : null,
     collaborators: (playlistDoc.collaborators || []).map(mapUser),
+
+    // derived values
     songCount: tracks.length,
     totalDurationSeconds,
     tracks,
+
+    // access control flags for frontend
     permissions: {
-      isOwner: String(playlistDoc.owner?._id) === String(currentUserId),
-      isCollaborator: (playlistDoc.collaborators || []).some(
-        (user) => String(user?._id) === String(currentUserId)
-      ),
+      isOwner: ownerId === String(currentUserId),
+      isCollaborator: collaboratorIds.has(String(currentUserId)),
     },
+
     createdAt: playlistDoc.createdAt,
     updatedAt: playlistDoc.updatedAt,
   };
 };
+
+
+
 
 const playlistPopulate = [
   {
@@ -97,194 +194,349 @@ const playlistPopulate = [
   },
 ];
 
+
+
+/**
+ * Normalize collaborator IDs
+ * - Ensures array input
+ * - Converts values to trimmed strings
+ * - Removes empty values
+ * - Removes duplicates
+ */
 const parseCollaboratorIds = (collaboratorIds) => {
   if (!collaboratorIds) return [];
 
   if (!Array.isArray(collaboratorIds)) return null;
 
   const filtered = collaboratorIds
-    .map((id) => String(id || "").trim())
+    .map((id) => String(id ?? "").trim()) // safer than ||
     .filter(Boolean);
 
   return [...new Set(filtered)];
 };
 
+
+/**
+ * Create a new playlist
+ *
+ * Flow:
+ * 1. Validate playlist name
+ * 2. Parse & clean collaborator IDs (remove invalid / duplicates)
+ * 3. Exclude owner from collaborators
+ * 4. Enforce max collaborators limit
+ * 5. Validate collaborators exist in DB
+ * 6. Create playlist
+ * 7. Populate related fields and return formatted response
+ *
+ * Access: Authenticated user
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 export const createPlaylist = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, description = "", coverImage = "", collaboratorIds = [] } = req.body;
+    const {
+      name,
+      description = "",
+      coverImage = "",
+      collaboratorIds = [],
+    } = req.body;
 
-    if (!name || !name.trim()) {
-      return res.status(400).json({ message: "Playlist name is required" });
+    // validate playlist name
+    if (!name?.trim()) {
+      return res.status(400).json({
+        message: "Playlist name is required",
+      });
     }
 
+    // sanitize collaborator IDs (array, trim, remove duplicates)
     const parsedCollaboratorIds = parseCollaboratorIds(collaboratorIds);
 
     if (parsedCollaboratorIds === null) {
-      return res
-        .status(400)
-        .json({ message: "collaboratorIds must be an array of user IDs" });
+      return res.status(400).json({
+        message: "collaboratorIds must be an array of user IDs",
+      });
     }
 
-    const cleanedCollaboratorIds = parsedCollaboratorIds.filter(
+    // remove owner from collaborators
+    const collaborators = parsedCollaboratorIds.filter(
       (id) => id !== String(userId)
     );
 
-    if (cleanedCollaboratorIds.length > MAX_COLLABORATORS) {
+    // enforce max collaborators limit
+    if (collaborators.length > MAX_COLLABORATORS) {
       return res.status(400).json({
         message: `Maximum ${MAX_COLLABORATORS} collaborators are allowed`,
       });
     }
 
-    if (cleanedCollaboratorIds.length > 0) {
-      const existingUsers = await UserModel.countDocuments({
-        _id: { $in: cleanedCollaboratorIds },
+    // validate users exist in DB
+    if (collaborators.length) {
+      const count = await UserModel.countDocuments({
+        _id: { $in: collaborators },
       });
 
-      if (existingUsers !== cleanedCollaboratorIds.length) {
+      if (count !== collaborators.length) {
         return res.status(400).json({
           message: "One or more collaborators are invalid",
         });
       }
     }
 
+    // create playlist
     const playlist = await PlaylistModel.create({
       name: name.trim(),
       description: description.trim(),
       coverImage,
       owner: userId,
-      collaborators: cleanedCollaboratorIds,
+      collaborators,
     });
 
-    const saved = await PlaylistModel.findById(playlist._id).populate(playlistPopulate);
+    // fetch with populated fields
+    const saved = await PlaylistModel.findById(playlist._id)
+      .populate(playlistPopulate);
 
     return res.status(201).json({
       message: "Playlist created successfully",
       playlist: mapPlaylist(saved, userId),
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
 
+
+
+/**
+ * Fetch a single playlist with access control
+ *
+ * Flow:
+ * 1. Fetch playlist by ID with populated relations
+ * 2. Check if playlist exists
+ * 3. Determine user role (owner / collaborator)
+ * 4. Restrict access if playlist is private
+ * 5. Return formatted playlist data
+ *
+ * Access Rules:
+ * - Public playlist → anyone can view
+ * - Private playlist → only owner or collaborators
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 export const getPlaylist = async (req, res) => {
   try {
-    const playlist = await PlaylistModel.findById(req.params.playlistId).populate(
-      playlistPopulate
-    );
+    const playlist = await PlaylistModel.findById(req.params.playlistId)
+      .populate(playlistPopulate);
 
     if (!playlist) {
-      return res.status(404).json({ message: "Playlist not found" });
+      return res.status(404).json({
+        message: "Playlist not found",
+      });
     }
 
     const userId = String(req.user.id);
+
+    // check ownership
     const isOwner = String(playlist.owner?._id) === userId;
+
+    // check collaborator access
     const isCollaborator = (playlist.collaborators || []).some(
       (user) => String(user?._id) === userId
     );
 
+    // restrict private playlist access
     if (!playlist.isPublic && !isOwner && !isCollaborator) {
-      return res.status(403).json({ message: "You cannot view this playlist" });
+      return res.status(403).json({
+        message: "You cannot view this playlist",
+      });
     }
 
     return res.status(200).json({
       message: "Playlist fetched successfully",
       playlist: mapPlaylist(playlist, req.user.id),
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
 
+
+
+/**
+ * Update playlist details (partial update)
+ *
+ * Flow:
+ * 1. Validate input (name should not be empty if provided)
+ * 2. Build update object dynamically
+ * 3. Update playlist in DB
+ * 4. Return updated playlist with populated data
+ *
+ * Notes:
+ * - Only provided fields are updated (PATCH behavior)
+ * - Access control (owner only) handled via middleware
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 export const updatePlaylist = async (req, res) => {
   try {
     const { name, description, coverImage, isPublic } = req.body;
 
+    // validate name if provided
     if (name !== undefined && !String(name).trim()) {
-      return res.status(400).json({ message: "Playlist name cannot be empty" });
+      return res.status(400).json({
+        message: "Playlist name cannot be empty",
+      });
     }
 
+    // build dynamic update object
     const updateData = {};
 
-    if (name !== undefined) updateData.name = String(name).trim();
-    if (description !== undefined) updateData.description = String(description).trim();
-    if (coverImage !== undefined) updateData.coverImage = coverImage;
-    if (isPublic !== undefined) updateData.isPublic = Boolean(isPublic);
+    if (name !== undefined) {
+      updateData.name = String(name).trim();
+    }
+
+    if (description !== undefined) {
+      updateData.description = String(description).trim();
+    }
+
+    if (coverImage !== undefined) {
+      updateData.coverImage = coverImage;
+    }
+
+    if (isPublic !== undefined) {
+      updateData.isPublic = Boolean(isPublic);
+    }
 
     const updated = await PlaylistModel.findByIdAndUpdate(
       req.params.playlistId,
       updateData,
-      {
-        new: true,
-      }
+      { new: true }
     ).populate(playlistPopulate);
 
     return res.status(200).json({
       message: "Playlist updated successfully",
       playlist: mapPlaylist(updated, req.user.id),
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
 
+
+
+/**
+ * Delete a playlist by ID
+ *
+ * Flow:
+ * 1. Delete playlist from DB
+ * 2. Return success response with deleted playlist ID
+ *
+ * Notes:
+ * - Access control (owner only) handled via middleware
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 export const deletePlaylist = async (req, res) => {
   try {
-    await PlaylistModel.findByIdAndDelete(req.params.playlistId);
+    const { playlistId } = req.params;
+
+    await PlaylistModel.findByIdAndDelete(playlistId);
 
     return res.status(200).json({
       message: "Playlist deleted successfully",
-      playlistId: req.params.playlistId,
+      playlistId,
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
 
+
+
+/**
+ * Add collaborators to a playlist
+ * - Validates input IDs
+ * - Excludes owner
+ * - Ensures users exist
+ * - Merges uniquely and enforces max limit
+ */
 export const addCollaborators = async (req, res) => {
   try {
     const { collaboratorIds = [] } = req.body;
     const playlist = req.playlist;
     const ownerId = String(playlist.owner);
-    const parsedCollaboratorIds = parseCollaboratorIds(collaboratorIds);
 
-    if (parsedCollaboratorIds === null || parsedCollaboratorIds.length === 0) {
+    // sanitize + dedupe input
+    const parsed = parseCollaboratorIds(collaboratorIds);
+    if (!parsed?.length) {
       return res.status(400).json({
         message: "collaboratorIds must be a non-empty array",
       });
     }
 
-    const requestedIds = parsedCollaboratorIds.filter((id) => id !== ownerId);
-    const uniqueCurrentIds = new Set((playlist.collaborators || []).map((id) => String(id)));
+    // exclude owner
+    const requested = parsed.filter((id) => id !== ownerId);
 
-    const toAdd = requestedIds.filter((id) => !uniqueCurrentIds.has(id));
+    // validate users exist
+    const validUsers = await UserModel.aggregate([
+      {
+        $match: {
+          _id: {
+            $in: requested.map(
+              (id) => new mongoose.Types.ObjectId(id)
+            ),
+          },
+        },
+      },
+      { $project: { _id: 1 } },
+    ]);
 
-    if (toAdd.length === 0) {
-      const populatedPlaylist = await PlaylistModel.findById(playlist._id).populate(
-        playlistPopulate
-      );
+    const validIds = validUsers.map((u) => String(u._id));
 
-      return res.status(200).json({
-        message: "All collaborators are already added",
-        playlist: mapPlaylist(populatedPlaylist, req.user.id),
-      });
-    }
-
-    if (uniqueCurrentIds.size + toAdd.length > MAX_COLLABORATORS) {
+    if (validIds.length !== requested.length) {
       return res.status(400).json({
-        message: `Maximum ${MAX_COLLABORATORS} collaborators are allowed`,
+        message: "One or more collaborators are invalid",
       });
     }
 
-    const users = await UserModel.find({ _id: { $in: toAdd } }).select("_id");
-
-    if (users.length !== toAdd.length) {
-      return res.status(400).json({ message: "One or more collaborators are invalid" });
-    }
-
-    const updated = await PlaylistModel.findByIdAndUpdate(
-      playlist._id,
-      { $addToSet: { collaborators: { $each: toAdd } } },
+    // merge collaborators (unique) + enforce max limit
+    const updated = await PlaylistModel.findOneAndUpdate(
+      { _id: playlist._id },
+      [
+        {
+          $set: {
+            collaborators: {
+              $slice: [
+                {
+                  $setUnion: [
+                    { $ifNull: ["$collaborators", []] },
+                    validIds.map(
+                      (id) => new mongoose.Types.ObjectId(id)
+                    ),
+                  ],
+                },
+                MAX_COLLABORATORS,
+              ],
+            },
+          },
+        },
+      ],
       { new: true }
     ).populate(playlistPopulate);
 
@@ -292,11 +544,20 @@ export const addCollaborators = async (req, res) => {
       message: "Collaborators added successfully",
       playlist: mapPlaylist(updated, req.user.id),
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Server error" });
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
 
+
+
+/**
+ * Remove a collaborator from a playlist
+ * Access: Owner only (handled via middleware)
+ */
 export const removeCollaborator = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -320,6 +581,8 @@ export const removeCollaborator = async (req, res) => {
     return res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
+
 
 export const addTrackToPlaylist = async (req, res) => {
   try {
