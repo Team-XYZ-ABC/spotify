@@ -60,10 +60,6 @@ const Playlist = () => {
     const isEmpty = !playlist || playlist.tracks.length === 0;
 
     useEffect(() => {
-        loadPlaylists();
-    }, [loadPlaylists]);
-
-    useEffect(() => {
         if (playlistId) {
             loadPlaylistById(playlistId);
         }
@@ -94,7 +90,7 @@ const Playlist = () => {
         }, 250);
 
         return () => clearTimeout(timeout);
-    }, [clearSuggestions, playlist, searchQuery, searchTracks]);
+    }, [searchQuery]);
 
     if (!playlist) {
         if (loading || isFetchingDetails) {
@@ -155,9 +151,6 @@ const Playlist = () => {
 
     const handleAddTrack = async (trackId) => {
         await addTrackToPlaylist(playlist.id, trackId);
-        if (searchQuery.trim()) {
-            await searchTracks(searchQuery, playlist.id);
-        }
     };
 
     const handleRemoveTrack = async (trackId) => {
