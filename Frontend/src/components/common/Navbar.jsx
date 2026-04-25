@@ -14,6 +14,7 @@ const Navbar = ({ toggleSidebar }) => {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const searchContainerRef = useRef(null);
+  const profileRef = useRef(null)
 
   const { results, isLoading } = useSearch(search);
 
@@ -85,7 +86,7 @@ const Navbar = ({ toggleSidebar }) => {
                     <TrackSuggestionResults tracks={results.trackSuggestions} query={search} />
                   </>
                 ) : (
-                  <div className="px-4 py-3 text-sm text-gray-400">No results found for "{search}"</div>
+                  <div className="px-4 py-3 text-sm text-zinc-400">No results found for "{search}"</div>
                 )}
               </div>
             )}
@@ -111,7 +112,7 @@ const Navbar = ({ toggleSidebar }) => {
           <i className="ri-group-line text-xl cursor-pointer text-gray-300 hover:text-white transition-colors"></i>
         </div>
 
-        <div className="relative">
+        <div className="relative" ref={profileRef}>
           <div
             onClick={() => setShowProfile(!showProfile)}
             className="h-9 w-9 md:h-10 md:w-10 flex items-center overflow-hidden justify-center rounded-full bg-zinc-800 font-semibold cursor-pointer text-sm md:text-base"
@@ -122,7 +123,7 @@ const Navbar = ({ toggleSidebar }) => {
               <h1>{user?.username?.toUpperCase()[0]}</h1>
             )}
           </div>
-          {showProfile && <UserMenuCard setShowProfile={setShowProfile} />}
+          {showProfile && <UserMenuCard setShowProfile={setShowProfile} profileRef={profileRef}/>}
         </div>
 
         <button onClick={toggleSidebar} className="md:hidden text-2xl">

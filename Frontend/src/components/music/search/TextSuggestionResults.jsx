@@ -15,15 +15,14 @@ const TextSuggestionResults = ({ suggestions, query }) => {
   };
 
   return (
-    <div className="mb-4">
-      <div className="text-xs uppercase text-gray-400 font-semibold px-3 py-2">Top results</div>
+    <div className="flex flex-col gap-2">
       {suggestions.map((item, idx) => (
         <div
           key={idx}
-          className="flex items-center gap-3 px-3 py-3 hover:bg-white/10 cursor-pointer rounded-md transition"
+          className="flex items-center gap-3 p-3 hover:bg-white/10 cursor-pointer rounded-md transition"
         >
-          <i className={`${getIcon(item.type)} text-xl text-gray-300`}></i>
-          <div className="flex-1">
+          <i className={`${getIcon(item.type)} text-xl text-zinc-300`}></i>
+          <div className="flex-1 text-zinc-400">
             <HighlightText text={item.name} highlight={query} />
             <div className="text-xs text-gray-400 capitalize">{item.type}</div>
           </div>
