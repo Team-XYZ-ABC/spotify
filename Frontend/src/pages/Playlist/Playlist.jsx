@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router";
 import PlaylistHeader from "../../components/Playlist/PlaylistHeader";
 import PlaylistControls from "../../components/Playlist/PlaylistControls";
@@ -6,6 +6,8 @@ import SongsTable from "../../components/Playlist/SongsTable";
 import MobileSongsList from "../../components/Playlist/MobileSongsList";
 import Footer from "../../components/common/Footer";
 import usePlaylists from "../../hooks/usePlaylists";
+import { useTrack } from "../../hooks/useTrack";
+import TrackPlayerBar from "../../components/music/trackCard/TrackPlayerBar";
 import { formatPlaylistDuration, formatTrackCount } from "../../utils/playlist";
 import CreatePlaylistModal from "../../components/Playlist/modals/CreatePlaylistModal";
 import EditPlaylistModal from "../../components/Playlist/modals/EditPlaylistModal";
@@ -19,6 +21,24 @@ const Playlist = () => {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isCollaboratorOpen, setIsCollaboratorOpen] = useState(false);
+
+    // ─── Audio Player state (must stay before usePlaylists) ─────────────
+    const audioRef = useRef(new Audio());
+    const [currentTrack, setCurrentTrack] = useState(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [shuffleEnabled, setShuffleEnabled] = useState(false);
+    const [repeatMode, setRepeatMode] = useState("off");
+    const { getStreamUrl } = useTrack();
+
+    // Clean up audio on unmount
+    useEffect(() => {
+        const audio = audioRef.current;
+        return () => {
+            audio.pause();
+            audio.src = "";
+        };
+    }, []);
+    // ─────────────────────────────────────────────────────────────────────
 
     const {
         playlists,
@@ -59,9 +79,100 @@ const Playlist = () => {
     );
     const isEmpty = !playlist || playlist.tracks.length === 0;
 
+    // ─── Audio callbacks (declared AFTER playlist to avoid TDZ) ─────────
+    const getTrackList = useCallback(() => {
+        const tracks = playlist?.tracks || [];
+        if (shuffleEnabled) {
+            const arr = [...tracks];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+        return tracks;
+    }, [shuffleEnabled, playlist]);
+
+    const playTrack = useCallback(async (song) => {
+        const audio = audioRef.current;
+
+        // Toggle play/pause if same track
+        if (currentTrack?.id === String(song.id)) {
+            if (audio.paused) {
+                await audio.play();
+                setIsPlaying(true);
+            } else {
+                audio.pause();
+                setIsPlaying(false);
+            }
+            return;
+        }
+
+        audio.pause();
+        try {
+            const { streamUrl } = await getStreamUrl(String(song.id));
+            audio.src = streamUrl;
+            audio.load();
+            await audio.play();
+            setCurrentTrack({ ...song, id: String(song.id) });
+            setIsPlaying(true);
+        } catch (err) {
+            console.error("Playback error:", err);
+        }
+    }, [currentTrack, getStreamUrl]);
+
+    const playNext = useCallback(() => {
+        const tracks = getTrackList();
+        const idx = tracks.findIndex((t) => String(t.id) === currentTrack?.id);
+        let nextIdx = idx + 1;
+        if (nextIdx >= tracks.length) {
+            if (repeatMode === "all") nextIdx = 0;
+            else { audioRef.current.pause(); setIsPlaying(false); return; }
+        }
+        playTrack(tracks[nextIdx]);
+    }, [currentTrack, getTrackList, repeatMode, playTrack]);
+
+    const playPrevious = useCallback(() => {
+        const tracks = getTrackList();
+        const idx = tracks.findIndex((t) => String(t.id) === currentTrack?.id);
+        let prevIdx = idx - 1;
+        if (prevIdx < 0) prevIdx = repeatMode === "all" ? tracks.length - 1 : 0;
+        playTrack(tracks[prevIdx]);
+    }, [currentTrack, getTrackList, repeatMode, playTrack]);
+
+    const handlePlayAll = useCallback(() => {
+        const tracks = playlist?.tracks || [];
+        if (!tracks.length) return;
+        if (currentTrack && isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+        } else {
+            playTrack(tracks[0]);
+        }
+    }, [playlist, currentTrack, isPlaying, playTrack]);
+
+    const handlePlayPause = useCallback(() => {
+        const audio = audioRef.current;
+        if (!currentTrack) return;
+        if (audio.paused) { audio.play(); setIsPlaying(true); }
+        else { audio.pause(); setIsPlaying(false); }
+    }, [currentTrack]);
+
+    // Handle track end (after playNext is declared)
     useEffect(() => {
-        loadPlaylists();
-    }, [loadPlaylists]);
+        const audio = audioRef.current;
+        const handleEnded = () => {
+            if (repeatMode === "one") {
+                audio.currentTime = 0;
+                audio.play();
+            } else {
+                playNext();
+            }
+        };
+        audio.addEventListener("ended", handleEnded);
+        return () => audio.removeEventListener("ended", handleEnded);
+    }, [repeatMode, playNext]);
+    // ─────────────────────────────────────────────────────────────────────
 
     useEffect(() => {
         if (playlistId) {
@@ -94,7 +205,7 @@ const Playlist = () => {
         }, 250);
 
         return () => clearTimeout(timeout);
-    }, [clearSuggestions, playlist, searchQuery, searchTracks]);
+    }, [searchQuery]);
 
     if (!playlist) {
         if (loading || isFetchingDetails) {
@@ -155,9 +266,6 @@ const Playlist = () => {
 
     const handleAddTrack = async (trackId) => {
         await addTrackToPlaylist(playlist.id, trackId);
-        if (searchQuery.trim()) {
-            await searchTracks(searchQuery, playlist.id);
-        }
     };
 
     const handleRemoveTrack = async (trackId) => {
@@ -212,6 +320,8 @@ const Playlist = () => {
                 onCreatePlaylist={() => setIsCreateOpen(true)}
                 onOpenCollaborators={() => setIsCollaboratorOpen(true)}
                 onDeletePlaylist={handleDeletePlaylist}
+                onPlay={handlePlayAll}
+                isPlaying={isPlaying}
             />
 
             {error && (
@@ -234,6 +344,9 @@ const Playlist = () => {
                             canModifyTracks={canModifyTracks}
                             onRemoveTrack={handleRemoveTrack}
                             onReorder={handleReorder}
+                            onPlay={playTrack}
+                            currentTrackId={currentTrack?.id}
+                            isPlaying={isPlaying}
                         />
                     </div>
 
@@ -243,6 +356,9 @@ const Playlist = () => {
                             songs={playlist.tracks}
                             canModifyTracks={canModifyTracks}
                             onRemoveTrack={handleRemoveTrack}
+                            onPlay={playTrack}
+                            currentTrackId={currentTrack?.id}
+                            isPlaying={isPlaying}
                         />
                     </div>
                 </>
@@ -324,7 +440,7 @@ const Playlist = () => {
                                             className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl object-cover"
                                         />) : (
                                             <div className="flex h-full p-4 items-center justify-center text-2xl text-zinc-500">
-                                                 <i className="ri-music-2-line"></i>
+                                                <i className="ri-music-2-line"></i>
                                             </div>
                                         )}
 
@@ -365,6 +481,28 @@ const Playlist = () => {
             </section>
 
             <Footer />
+
+            {/* Music Player Bar — only visible when a track is loaded */}
+            {currentTrack && (
+                <div className="sticky bottom-0 left-0 right-0 z-50">
+                    <TrackPlayerBar
+                        currentTrack={currentTrack}
+                        isPlaying={isPlaying}
+                        onPlayPause={handlePlayPause}
+                        onNext={playNext}
+                        onPrevious={playPrevious}
+                        onShuffleToggle={() => setShuffleEnabled((prev) => !prev)}
+                        onRepeatToggle={() =>
+                            setRepeatMode((prev) =>
+                                prev === "off" ? "all" : prev === "all" ? "one" : "off"
+                            )
+                        }
+                        shuffleEnabled={shuffleEnabled}
+                        repeatMode={repeatMode}
+                        audioRef={audioRef}
+                    />
+                </div>
+            )}
         </div>
     );
 };

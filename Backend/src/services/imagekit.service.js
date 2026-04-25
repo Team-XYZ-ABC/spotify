@@ -1,12 +1,3 @@
-import { toFile } from "@imagekit/nodejs";
-import imagekit from "../configs/imagekit.config.js";
-
-
-export const uploadFile = async(buffer , fileName , folder="")=>{
-    const result = await imagekit.files.upload({
-        file: await toFile(buffer , fileName),
-        fileName: fileName,
-        filePath: `${folder}/${fileName}`
-    })
-return result
-}
+// DEPRECATED — replaced by S3. See src/services/s3.service.js
+// This file can be deleted.
+export const uploadFile = null;

@@ -1,8 +1,9 @@
 import ArtistModel from "../models/artist.model.js";
 import UserModel from "../models/user.model.js";
-import { uploadFile } from "../services/imagekit.service.js";
+import { getCloudFrontUrl, getPresignedGetUrl, getS3KeyFromUrl } from "../services/s3.service.js";
+import CONFIG from "../configs/env.config.js";
 
-export const getProfile = async(req, res)=>{
+export const getProfile = async (req, res) => {
     try {
         const userId = req.user.id;
 
@@ -12,19 +13,26 @@ export const getProfile = async(req, res)=>{
             return res.status(404).json({ message: "User not found" });
         }
 
-        if (user.role === "listener") {
+        // Replace avatar with a fresh presigned GET URL
+        const userObj = user.toObject();
+        const avatarS3Key = userObj.avatarKey || getS3KeyFromUrl(userObj.avatar);
+        if (avatarS3Key) {
+            userObj.avatar = await getPresignedGetUrl(avatarS3Key, 86400); // 24 hours
+        }
+
+        if (userObj.role === "listener") {
             return res.status(200).json({
                 success: true,
-                user
+                user: userObj
             });
         }
 
-        if (user.role === "artist") {
+        if (userObj.role === "artist") {
             const artist = await ArtistModel.findOne({ user: userId });
             return res.status(200).json({
                 message: "logged in user profile fetched successfully",
                 success: true,
-                user,
+                user: userObj,
                 artist
             });
         }
@@ -38,9 +46,8 @@ export const getProfile = async(req, res)=>{
 export const updateProfile = async (req, res) => {
     try {
         const userId = req.user.id;
-        
-        const { displayName, bio } = req.body || {};
-        const file = req.file
+
+        const { displayName, bio, avatarKey } = req.body || {};
 
         const user = await UserModel.findById(userId);
 
@@ -50,19 +57,15 @@ export const updateProfile = async (req, res) => {
             });
         }
 
-        if(file){
-            const result = await uploadFile(
-                file.buffer,
-                file.originalname,
-                "uploads/profile"
-            );
-            user.avatar = result.url
-        }
-
-        if (!displayName && !bio && !file) {
+        if (!displayName && !bio && !avatarKey) {
             return res.status(400).json({
                 message: "No data provided to update"
             });
+        }
+
+        if (avatarKey) {
+            user.avatar = getCloudFrontUrl(avatarKey);
+            user.avatarKey = avatarKey;
         }
 
         if (displayName) user.displayName = displayName;
@@ -70,13 +73,21 @@ export const updateProfile = async (req, res) => {
 
         await user.save();
 
+        // Build presigned avatar URL for the response
+        const avatarS3Key = user.avatarKey || getS3KeyFromUrl(user.avatar);
+        const signedAvatar = avatarS3Key
+            ? await getPresignedGetUrl(avatarS3Key, 86400)
+            : user.avatar;
+
         const safeUser = {
-            id: user._id,
+            _id: user._id,
             displayName: user.displayName,
             bio: user.bio,
             email: user.email,
             username: user.username,
-            avatar: user.avatar
+            role: user.role,
+            avatarKey: user.avatarKey,
+            avatar: signedAvatar,
         };
 
         res.status(200).json({
@@ -106,6 +117,12 @@ export const getOtherUserProfile = async (req, res) => {
             });
         }
 
+        // Replace avatar with a fresh presigned GET URL
+        const avatarS3Key = user.avatarKey || getS3KeyFromUrl(user.avatar);
+        if (avatarS3Key) {
+            user.avatar = await getPresignedGetUrl(avatarS3Key, 86400); // 24 hours
+        }
+
         if (user.role === "listener") {
             return res.status(200).json({
                 message: "user profile fetched successfully",
@@ -132,10 +149,10 @@ export const getOtherUserProfile = async (req, res) => {
     }
 };
 
-export const getHistory = async(req, res)=>{
-        res.send("get history")
+export const getHistory = async (req, res) => {
+    res.send("get history")
 }
 
-export const getRecentlyPlayed = async(req, res)=>{
-        res.send("get recently played")
+export const getRecentlyPlayed = async (req, res) => {
+    res.send("get recently played")
 }

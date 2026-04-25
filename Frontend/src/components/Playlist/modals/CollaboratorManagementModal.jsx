@@ -21,10 +21,10 @@ const CollaboratorManagementModal = ({
 
     useEffect(() => {
         if (!isOpen) return;
-        if(!query) {
+        if (!query) {
             dispatch(clearCollaboratorSearch())
             return;
-        } 
+        }
 
         const timeout = setTimeout(() => {
             onSearch(query.trim());
@@ -62,7 +62,7 @@ const CollaboratorManagementModal = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 px-4">
+        <div className="fixed inset-0 z-90 flex items-center justify-center bg-black/60 px-4">
             <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#121212] p-6 text-white shadow-2xl">
                 <div className="mb-5 flex items-center justify-between">
                     <h2 className="text-xl font-bold">Manage collaborators</h2>
@@ -117,9 +117,28 @@ const CollaboratorManagementModal = ({
                             {isSearching ? (
                                 <p className="text-sm text-zinc-400">Searching...</p>
                             ) : (
-                                searchResults
-                                    .filter((user) => !currentCollaboratorIds.has(user.id))
-                                    .map((user) => (
+                                (() => {
+                                    const users = searchResults.filter(
+                                        (user) => !currentCollaboratorIds.has(user.id)
+                                    );
+
+                                    if (!query.trim()) {
+                                        return (
+                                            <p className="rounded-lg border border-dashed border-white/10 p-3 text-sm text-zinc-400">
+                                                Start typing username, display name or email.
+                                            </p>
+                                        );
+                                    }
+
+                                    if (!users.length) {
+                                        return (
+                                            <p className="rounded-lg border border-dashed border-white/10 p-3 text-sm text-zinc-400">
+                                                No users found for this search.
+                                            </p>
+                                        );
+                                    }
+
+                                    return users.map((user) => (
                                         <button
                                             key={user.id}
                                             onClick={() => toggleUser(user.id)}
@@ -128,10 +147,26 @@ const CollaboratorManagementModal = ({
                                                 : "border-white/10 bg-white/5 hover:bg-white/10"
                                                 }`}
                                         >
-                                            <p className="truncate text-sm font-medium">{user.displayName || user.username}</p>
-                                            <p className="truncate text-xs text-zinc-400">{user.email}</p>
+                                            <div className="flex items-center gap-3">
+                                                {user.avatar ? (
+                                                    <img
+                                                        src={user.avatar}
+                                                        alt={user.displayName || user.username}
+                                                        className="h-9 w-9 rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-bold uppercase">
+                                                        {(user.displayName || user.username || "U").charAt(0)}
+                                                    </div>
+                                                )}
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-medium">{user.displayName || user.username}</p>
+                                                    <p className="truncate text-xs text-zinc-400">{user.email}</p>
+                                                </div>
+                                            </div>
                                         </button>
-                                    ))
+                                    ));
+                                })()
                             )}
                         </div>
 

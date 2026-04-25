@@ -14,6 +14,7 @@ import Albums from "../pages/user/Artist/Albums";
 import Trending from "../pages/user/Artist/Trending";
 import AdsLibrary from "../pages/user/Artist/AdsLibrary";
 import UploadTrack from "../pages/user/Artist/UploadTrack";
+import Songs from "../pages/user/Artist/Songs";
 import Playlist from "../pages/Playlist/Playlist";
 import PlaylistList from "../pages/Playlist/PlaylistList";
 
@@ -104,6 +105,7 @@ export const router = createBrowserRouter([
                     { path: "/trending", element: <Trending /> },
                     { path: "/ads-library", element: <AdsLibrary /> },
                     { path: "/uploadtrack", element: <UploadTrack /> },
+                    { path: "/songs", element: <Songs /> },
                     {
                         path: "/unauthorized",
                         element: <div>Access Denied 🚫</div>

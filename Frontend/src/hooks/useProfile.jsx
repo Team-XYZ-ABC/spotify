@@ -15,6 +15,8 @@ import {
   getProfileService,
   otherUserProfileService,
   updateProfileService,
+  getAvatarUploadUrlService,
+  uploadAvatarToS3,
 } from "../services/profile.service";
 
 /**
@@ -46,14 +48,29 @@ export const useProfile = () => {
   }, [dispatch]);
 
   /**
-   * Update user profile
+   * Update user profile.
+   * @param {{ displayName?: string, bio?: string, avatarFile?: File }} data
    */
   const updateProfile = useCallback(
     async (data) => {
       try {
         dispatch(setLoading(true));
 
-        const res = await updateProfileService(data);
+        const payload = {};
+        if (data.displayName) payload.displayName = data.displayName;
+        if (data.bio) payload.bio = data.bio;
+
+        // If a new avatar file is provided, upload to S3 first
+        if (data.avatarFile) {
+          const { uploadUrl, key } = await getAvatarUploadUrlService(
+            data.avatarFile.name,
+            data.avatarFile.type
+          );
+          await uploadAvatarToS3(uploadUrl, data.avatarFile);
+          payload.avatarKey = key;
+        }
+
+        const res = await updateProfileService(payload);
 
         const updatedUser =
           res?.user || res?.data?.user || res?.data;

@@ -48,7 +48,9 @@ const profileSlice = createSlice({
          * Update current user profile
          */
         updateProfileSuccess: (state, action) => {
-            state.profile = action.payload;
+            // Merge — preserves fields like role, subscription, _id that
+            // the update response doesn't return
+            state.profile = { ...state.profile, ...action.payload };
             state.loading = false;
         },
 

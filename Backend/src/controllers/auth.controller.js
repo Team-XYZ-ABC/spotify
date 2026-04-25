@@ -4,6 +4,14 @@ import bcrypt from 'bcrypt'
 import { jwtSign, jwtVerify } from "../services/jwt.service.js"
 import mongoose from "mongoose"
 import ArtistModel from "../models/artist.model.js"
+import { getPresignedGetUrl, getS3KeyFromUrl } from "../services/s3.service.js"
+
+/** Sign avatar URL if S3 key is available */
+const signAvatar = async (user) => {
+    const key = user.avatarKey || getS3KeyFromUrl(user.avatar);
+    if (!key) return user.avatar || null;
+    try { return await getPresignedGetUrl(key, 86400); } catch { return user.avatar || null; }
+};
 
 export const isEmailExist = async (req, res) => {
     try {
@@ -180,8 +188,10 @@ export const loginUser = async (req, res) => {
             user: {
                 id: user._id,
                 username: user.username,
+                displayName: user.displayName,
+                email: user.email,
                 role: user.role,
-                avatar: user.avatar
+                avatar: await signAvatar(user)
             }
         });
 
@@ -231,7 +241,7 @@ export const getCurrentUser = async (req, res) => {
 
         const decoded = jwtVerify(token);
         const user = await UserModel.findById(decoded.id)
-            .select("_id username role isActive avatar displayName email");
+            .select("_id username role isActive avatar avatarKey displayName email");
 
         if (!user) {
             return res.status(404).json({
@@ -251,7 +261,7 @@ export const getCurrentUser = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 role: user.role,
-                avatar: user.avatar,
+                avatar: await signAvatar(user),
                 displayName: user.displayName,
                 email: user.email
             }

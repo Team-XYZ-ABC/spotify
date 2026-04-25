@@ -5,8 +5,7 @@ import { useSelector } from "react-redux";
 
 const DashboardSidebar = ({ isCollapsed, setIsCollapsed }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const {user} = useSelector((state) => state.user);
-  console.log(user)
+  const { user } = useSelector((state) => state.user);
 
   return (
     <>
@@ -78,16 +77,14 @@ const DashboardSidebar = ({ isCollapsed, setIsCollapsed }) => {
               onClick={() => setIsSidebarOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 h-11 rounded-lg transition
-                ${
-                  isActive
-                    ? "bg-white text-black"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                ${isActive
+                  ? "bg-white text-black"
+                  : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
                 }`}
             >
               <div
-                className={`w-6 flex ${
-                  isCollapsed ? "justify-center w-full" : "justify-center"
-                }`}
+                className={`w-6 flex ${isCollapsed ? "justify-center w-full" : "justify-center"
+                  }`}
               >
                 <i className={`${tab.icon}`}></i>
               </div>

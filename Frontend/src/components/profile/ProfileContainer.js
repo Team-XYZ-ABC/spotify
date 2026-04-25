@@ -71,9 +71,9 @@ export const useProfileContainer = () => {
                 return;
             }
 
-            const payload = new FormData();
-            if (hasNameChange) payload.append("displayName", trimmedName);
-            if (hasFileChange) payload.append("profile", nextFile);
+            const payload = {};
+            if (hasNameChange) payload.displayName = trimmedName;
+            if (hasFileChange) payload.avatarFile = nextFile;
 
             setIsSaving(true);
 

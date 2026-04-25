@@ -1,6 +1,3 @@
-import multer from "multer";
-
-
-const upload = multer({storage: multer.memoryStorage()})
-
-export default upload
+// DEPRECATED — file uploads are now handled via S3 presigned URLs.
+// See POST /api/v1/upload/presigned-url
+// This file can be deleted.
