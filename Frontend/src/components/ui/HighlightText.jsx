@@ -8,7 +8,7 @@ const HighlightText = ({ text, highlight }) => {
     <>
       {parts.map((part, i) =>
         regex.test(part) ? (
-          <span key={i} className="text-white font-bold">
+          <span key={i} className="text-white">
             {part}
           </span>
         ) : (

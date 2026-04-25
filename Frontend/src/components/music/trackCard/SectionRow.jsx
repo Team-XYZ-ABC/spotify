@@ -2,6 +2,7 @@ import React from 'react'
 import TrackCard from './TrackCard';
 
 const SectionRow = ({ title, items, type, onPlay  }) => {
+  
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between px-2">

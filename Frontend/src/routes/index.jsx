@@ -17,6 +17,8 @@ import UploadTrack from "../pages/user/Artist/UploadTrack";
 import Songs from "../pages/user/Artist/Songs";
 import Playlist from "../pages/Playlist/Playlist";
 import PlaylistList from "../pages/Playlist/PlaylistList";
+import AccountPage from "../pages/user/account/AccountPage";
+import ViewTrack from "../pages/track/ViewTrack";
 
 // --- Lazy Loads ---
 const Home = lazy(() => import("../pages/home/Home"));
@@ -26,6 +28,7 @@ const PhoneNumber = lazy(() => import("../pages/auth/PhoneNumber"));
 const VerifyOtp = lazy(() => import("../pages/auth/VerifyOtp"));
 const RegisterStep1 = lazy(() => import("../pages/auth/RegisterStep1"));
 const UserProfile = lazy(() => import("../pages/user/profile/UserProfile"));
+const Account = lazy(() => import("../pages/user/account/Account"));
 const NotFound = lazy(() => import("../components/common/NotFound"));
 
 export const router = createBrowserRouter([
@@ -42,6 +45,10 @@ export const router = createBrowserRouter([
                 children: [
                     // Just drop public paths here in the future
                     // { path: "/about", element: <About /> },
+                    {
+                        path: "/track/:trackId",
+                        element: <ViewTrack/>
+                    }
                 ],
             },
 
@@ -61,7 +68,7 @@ export const router = createBrowserRouter([
                     { path: "/profile", element: <UserProfile /> },
                 ],
             },
-
+            { path: "/account", element: <AccountPage /> },
             {
                 element: (
                     <AuthRoute isPrivate={false}>

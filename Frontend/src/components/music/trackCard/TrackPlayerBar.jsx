@@ -150,9 +150,9 @@ const TrackPlayerBar = ({
                 title={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? (
-                  <i className="cursor-pointer ri-pause-fill text-2xl font-bold"></i>
+                  <i className="cursor-pointer text-black ri-pause-fill text-2xl font-bold"></i>
                 ) : (
-                  <i className="cursor-pointer ri-play-fill text-2xl font-bold"></i>
+                  <i className="cursor-pointer text-black ri-play-fill text-2xl font-bold"></i>
                 )}
               </button>
               <button
