@@ -29,4 +29,9 @@ export const DashboardTabs = [
         icon: "ri-upload-cloud-2-line",
         label: "Upload Track"
     },
+    {
+        path: '/songs',
+        icon: "ri-music-2-line",
+        label: "Songs"
+    },
 ];

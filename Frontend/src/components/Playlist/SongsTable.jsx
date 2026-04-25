@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { formatAddedLabel } from "../../utils/playlist";
 
-const SongsTable = ({ songs, onRemoveTrack, canModifyTracks, onReorder }) => {
+const SongsTable = ({ songs, onRemoveTrack, canModifyTracks, onReorder, onPlay, currentTrackId, isPlaying }) => {
     const [dragIndex, setDragIndex] = useState(null);
 
     const handleDrop = async (dropIndex) => {
@@ -37,10 +37,30 @@ const SongsTable = ({ songs, onRemoveTrack, canModifyTracks, onReorder }) => {
                         if (canModifyTracks) event.preventDefault();
                     }}
                     onDrop={() => handleDrop(index)}
-                    className="grid grid-cols-12 gap-4 px-4 lg:px-6 py-3 items-center rounded-md transition hover:bg-[#1a1a1a]"
+                    className="group grid grid-cols-12 gap-4 px-4 lg:px-6 py-3 items-center rounded-md transition hover:bg-[#1a1a1a] cursor-pointer"
+                    onClick={() => onPlay?.(song)}
                 >
-                    <div className="col-span-1 text-gray-400 text-lg">
-                        {index + 1}
+                    <div className="col-span-1 text-gray-400 text-lg flex items-center">
+                        {currentTrackId === String(song.id) ? (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onPlay?.(song); }}
+                                className="text-[#1ed760]"
+                                aria-label={isPlaying ? "Pause" : "Play"}
+                            >
+                                <i className={isPlaying ? "ri-pause-fill" : "ri-play-fill"}></i>
+                            </button>
+                        ) : (
+                            <>
+                                <span className="group-hover:hidden">{index + 1}</span>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onPlay?.(song); }}
+                                    className="hidden group-hover:inline text-white"
+                                    aria-label={`Play ${song.title}`}
+                                >
+                                    <i className="ri-play-fill"></i>
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     <div className="col-span-5 flex items-center gap-4 min-w-0">

@@ -104,8 +104,14 @@ const userSchema = new mongoose.Schema(
             select: false,
         },
 
-        // Profile image
+        // Profile image URL
         avatar: {
+            type: String,
+            default: null,
+        },
+
+        // S3 key for avatar (used to generate presigned GET URLs)
+        avatarKey: {
             type: String,
             default: null,
         },

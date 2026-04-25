@@ -1,9 +1,3 @@
-import ImageKit from "@imagekit/nodejs"
-import CONFIG from "../configs/env.config.js"
-
-
-const imagekit = new ImageKit({
-    privateKey: CONFIG.IMAGEKIT_PRIVATE_KEY
-})
-
-export default imagekit
+// DEPRECATED — replaced by S3. See src/configs/s3.config.js
+// This file can be deleted.
+export default null;

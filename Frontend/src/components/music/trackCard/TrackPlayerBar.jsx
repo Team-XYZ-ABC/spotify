@@ -19,6 +19,10 @@ const TrackPlayerBar = ({
   const [isSeeking, setIsSeeking] = useState(false);
   const progressBarRef = useRef(null);
 
+  const progressPercent = duration > 0
+    ? Math.min(100, Math.max(0, (currentTime / duration) * 100))
+    : 0;
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -26,19 +30,34 @@ const TrackPlayerBar = ({
     const updateTime = () => {
       if (!isSeeking) setCurrentTime(audio.currentTime);
     };
-    const updateDuration = () => setDuration(audio.duration);
-    const handleVolumeChange = () => setVolume(audio.volume);
+    const updateDuration = () => {
+      const nextDuration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      setDuration(nextDuration);
+    };
+    const handleVolumeChange = () => {
+      setVolume(audio.volume);
+      setIsMuted(audio.volume === 0);
+    };
+
+    // Initial sync in case metadata was loaded before listeners attached.
+    setCurrentTime(Number.isFinite(audio.currentTime) ? audio.currentTime : 0);
+    updateDuration();
+    handleVolumeChange();
 
     audio.addEventListener("timeupdate", updateTime);
+    audio.addEventListener("durationchange", updateDuration);
     audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("loadeddata", updateDuration);
     audio.addEventListener("volumechange", handleVolumeChange);
 
     return () => {
       audio.removeEventListener("timeupdate", updateTime);
+      audio.removeEventListener("durationchange", updateDuration);
       audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("loadeddata", updateDuration);
       audio.removeEventListener("volumechange", handleVolumeChange);
     };
-  }, [audioRef, isSeeking]);
+  }, [audioRef, isSeeking, currentTrack?.id]);
 
   const formatTime = (seconds) => {
     if (isNaN(seconds)) return "0:00";
@@ -48,9 +67,10 @@ const TrackPlayerBar = ({
   };
 
   const handleSeek = (e) => {
+    if (!progressBarRef.current || !duration) return;
     const rect = progressBarRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const percent = x / rect.width;
+    const percent = Math.min(1, Math.max(0, x / rect.width));
     const newTime = percent * duration;
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
@@ -111,9 +131,8 @@ const TrackPlayerBar = ({
             <div className="flex items-center gap-8">
               <button
                 onClick={onShuffleToggle}
-                className={`transition ${
-                  shuffleEnabled ? "text-green-500" : "text-[#b3b3b3] hover:text-white"
-                }`}
+                className={`transition ${shuffleEnabled ? "text-green-500" : "text-[#b3b3b3] hover:text-white"
+                  }`}
                 title="Shuffle"
               >
                 <i className="cursor-pointer ri-shuffle-line text-xl"></i>
@@ -145,9 +164,8 @@ const TrackPlayerBar = ({
               </button>
               <button
                 onClick={onRepeatToggle}
-                className={`transition ${
-                  repeatMode !== "off" ? "text-green-500" : "text-[#b3b3b3] hover:text-white"
-                }`}
+                className={`transition ${repeatMode !== "off" ? "text-green-500" : "text-[#b3b3b3] hover:text-white"
+                  }`}
                 title={`Repeat ${repeatMode === "one" ? "one" : repeatMode === "all" ? "all" : "off"}`}
               >
                 <span className="text-base">{getRepeatIcon()}</span>
@@ -163,11 +181,11 @@ const TrackPlayerBar = ({
               >
                 <div
                   className="absolute h-full bg-white rounded-full"
-                  style={{ width: `${(currentTime / duration) * 100 || 0}%` }}
+                  style={{ width: `${progressPercent}%` }}
                 />
                 <div
                   className="absolute w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 top-1/2 -translate-y-1/2"
-                  style={{ left: `${(currentTime / duration) * 100 || 0}%` }}
+                  style={{ left: `${progressPercent}%` }}
                 />
               </div>
               <span className="text-xs text-[#b3b3b3]">{formatTime(duration)}</span>

@@ -146,6 +146,12 @@ const trackSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+
+        // S3 key for cover image (used to generate presigned GET URLs)
+        coverImageKey: {
+            type: String,
+            default: null,
+        },
     },
     {
         // Automatically manages createdAt & updatedAt
