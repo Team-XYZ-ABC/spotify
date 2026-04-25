@@ -1,10 +1,23 @@
 import MenuItem from "./MenuItem";
 import useAuth from "../../hooks/useAuth";
 import { useSelector } from "react-redux";
+import { useEffect, useRef } from "react";
 
 const UserMenuCard = ({ setShowProfile, profileRef }) => {
   const { logoutUser } = useAuth();
   const {user} = useSelector((state) => state.user);
+  const menuContainerRef = useRef();
+
+  // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (e) => {
+        if (menuContainerRef.current && !menuContainerRef.current.contains(e.target) && !profileRef.current.contains(e.target)) {
+          setShowProfile(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
   return (
     <div ref={menuContainerRef} className="
