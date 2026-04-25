@@ -9,9 +9,9 @@ import {
   getTrackRecommendations,
   updateTrack,
   deleteTrack,
-  uploadTrack
+  uploadTrack,
+  getMyTracks
 } from "../controllers/track.controller.js";
-import upload from "../middlewares/multer.js";
 import isAuthenticated from "../middlewares/auth.middleware.js";
 import authRole from "../middlewares/authRole.middleware.js";
 
@@ -31,14 +31,11 @@ trackRouter.get("/:trackId/credits", getTrackCredits);
 
 trackRouter.get("/:trackId/recommendations", getTrackRecommendations);
 
-trackRouter.post("/artist/upload/track", isAuthenticated, authRole(["artist"]), upload.fields([
-  { name: "file", maxCount: 1 },
-  { name: "coverImage", maxCount: 1 }
-]), uploadTrack);
+trackRouter.post("/artist/upload/track", isAuthenticated, authRole(["artist"]), uploadTrack);
 
-trackRouter.patch("/artist/:trackId", isAuthenticated, authRole(["artist"]),upload.fields([
-    { name: "coverImage", maxCount: 1 }
-  ]), updateTrack);
+trackRouter.get("/artist/my-tracks", isAuthenticated, authRole(["artist"]), getMyTracks);
+
+trackRouter.patch("/artist/:trackId", isAuthenticated, authRole(["artist"]), updateTrack);
 
 trackRouter.delete("/artist/:trackId", isAuthenticated, authRole(["artist"]), deleteTrack);
 

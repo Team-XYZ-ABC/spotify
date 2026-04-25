@@ -318,6 +318,9 @@ const playlistSlice = createSlice({
             })
             .addCase(addTrackToPlaylistThunk.fulfilled, (state, action) => {
                 upsertPlaylist(state, action.payload);
+                state.trackSuggestions = state.trackSuggestions.filter(
+                    (track) => track.id !== action.payload.tracks.slice(-1)[0].id
+                );
             })
             .addCase(addTrackToPlaylistThunk.rejected, (state, action) => {
                 state.error = action.payload || "Failed to add track";

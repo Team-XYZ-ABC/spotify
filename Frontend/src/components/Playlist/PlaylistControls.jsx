@@ -8,6 +8,8 @@ const PlaylistControls = ({
     onCreatePlaylist,
     onOpenCollaborators,
     onDeletePlaylist,
+    onPlay,
+    isPlaying,
 }) => {
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-5 bg-[linear-gradient(180deg,rgba(0,0,0,0.36),transparent)]">
@@ -15,12 +17,13 @@ const PlaylistControls = ({
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                     <button
                         disabled={isEmpty}
+                        onClick={onPlay}
                         className={`flex h-14 w-14 items-center justify-center rounded-full text-3xl transition-transform ${isEmpty
                             ? "cursor-not-allowed bg-zinc-700 text-zinc-500"
                             : "bg-[#1ed760] text-black hover:scale-[1.03]"
                             }`}
                     >
-                        <i className="ri-play-fill ml-1"></i>
+                        <i className={`${isPlaying ? "ri-pause-fill" : "ri-play-fill ml-1"}`}></i>
                     </button>
 
                     <button

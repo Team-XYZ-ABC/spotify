@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import PlaylistModel from "../models/playlist.model.js";
 import TrackModel from "../models/track.model.js";
 import UserModel from "../models/user.model.js";
+import { getPresignedGetUrl, getS3KeyFromUrl } from "../services/s3.service.js";
 
 const MAX_COLLABORATORS = 10;
 
@@ -43,7 +44,7 @@ const formatDuration = (seconds = 0) => {
  *
  * @returns {Object|null} Formatted track object or null if invalid
  */
-const mapTrack = (playlistTrack) => {
+const mapTrack = async (playlistTrack) => {
   const trackDoc = playlistTrack?.track;
 
   // guard: invalid or missing track
@@ -58,13 +59,17 @@ const mapTrack = (playlistTrack) => {
   // extract featured artists (excluding primary artist)
   const featuredArtists = Array.isArray(trackDoc.artists)
     ? trackDoc.artists
-      .map((artist) => artist?.stageName)
+      .map((artist) => {
+        if (typeof artist === "string") return artist.trim();
+        if (artist && typeof artist === "object") return artist.stageName?.trim();
+        return "";
+      })
       .filter(Boolean)
       .filter((name) => name !== mainArtist)
     : [];
 
-  return {
-    id: trackDoc._id,
+  const result = {
+    id: String(trackDoc._id),
     title: trackDoc.title,
 
     // combine artists into single string
@@ -84,6 +89,14 @@ const mapTrack = (playlistTrack) => {
     addedAt: playlistTrack.addedAt,
     addedBy: playlistTrack.addedBy,
   };
+
+  // Sign cover image via S3 presigned GET URL
+  const imageKey = trackDoc.coverImageKey || getS3KeyFromUrl(trackDoc.coverImage);
+  if (imageKey) {
+    result.image = await getPresignedGetUrl(imageKey, 86400);
+  }
+
+  return result;
 };
 
 
@@ -99,13 +112,26 @@ const mapTrack = (playlistTrack) => {
  * @param {Object} userDoc - Raw user document (may be populated or partial)
  * @returns {Object} Normalized user object
  */
-const mapUser = (userDoc) => ({
-  id: userDoc?._id,
-  username: userDoc?.username,
-  email: userDoc?.email,
-  displayName: userDoc?.displayName,
-  avatar: userDoc?.avatar || "",
-});
+const mapUser = async (userDoc) => {
+  const result = {
+    id: userDoc?._id ? String(userDoc._id) : null,
+    username: userDoc?.username,
+    email: userDoc?.email,
+    displayName: userDoc?.displayName,
+    avatar: userDoc?.avatar || "",
+  };
+
+  const avatarKey = userDoc?.avatarKey || getS3KeyFromUrl(userDoc?.avatar);
+  if (avatarKey) {
+    try {
+      result.avatar = await getPresignedGetUrl(avatarKey, 86400);
+    } catch {
+      // keep legacy avatar URL if signing fails
+    }
+  }
+
+  return result;
+};
 
 
 
@@ -124,11 +150,11 @@ const mapUser = (userDoc) => ({
  *
  * @returns {Object} Formatted playlist object
  */
-const mapPlaylist = (playlistDoc, currentUserId) => {
+const mapPlaylist = async (playlistDoc, currentUserId) => {
   // transform tracks and remove invalid entries
-  const tracks = (playlistDoc.tracks || [])
-    .map(mapTrack)
-    .filter(Boolean);
+  const tracks = (await Promise.all(
+    (playlistDoc.tracks || []).map(mapTrack)
+  )).filter(Boolean);
 
   // calculate total duration in seconds
   const totalDurationSeconds = tracks.reduce(
@@ -152,8 +178,8 @@ const mapPlaylist = (playlistDoc, currentUserId) => {
     isPublic: playlistDoc.isPublic,
 
     // map user-related fields
-    owner: playlistDoc.owner ? mapUser(playlistDoc.owner) : null,
-    collaborators: (playlistDoc.collaborators || []).map(mapUser),
+    owner: playlistDoc.owner ? await mapUser(playlistDoc.owner) : null,
+    collaborators: await Promise.all((playlistDoc.collaborators || []).map(mapUser)),
 
     // derived values
     songCount: tracks.length,
@@ -177,15 +203,15 @@ const mapPlaylist = (playlistDoc, currentUserId) => {
 const playlistPopulate = [
   {
     path: "owner",
-    select: "displayName username email avatar",
+    select: "displayName username email avatar avatarKey",
   },
   {
     path: "collaborators",
-    select: "displayName username email avatar",
+    select: "displayName username email avatar avatarKey",
   },
   {
     path: "tracks.track",
-    select: "title duration coverImage primaryArtist artists album",
+    select: "title duration coverImage coverImageKey primaryArtist artists album",
     populate: [
       { path: "primaryArtist", select: "stageName" },
       { path: "artists", select: "stageName" },
@@ -299,7 +325,7 @@ export const createPlaylist = async (req, res) => {
 
     return res.status(201).json({
       message: "Playlist created successfully",
-      playlist: mapPlaylist(saved, userId),
+      playlist: await mapPlaylist(saved, userId),
     });
 
   } catch (error) {
@@ -358,7 +384,7 @@ export const getPlaylist = async (req, res) => {
 
     return res.status(200).json({
       message: "Playlist fetched successfully",
-      playlist: mapPlaylist(playlist, req.user.id),
+      playlist: await mapPlaylist(playlist, req.user.id),
     });
 
   } catch (error) {
@@ -424,7 +450,7 @@ export const updatePlaylist = async (req, res) => {
 
     return res.status(200).json({
       message: "Playlist updated successfully",
-      playlist: mapPlaylist(updated, req.user.id),
+      playlist: await mapPlaylist(updated, req.user.id),
     });
 
   } catch (error) {
@@ -505,7 +531,7 @@ export const addCollaborators = async (req, res) => {
         },
       },
       { $project: { _id: 1 } },
-      
+
     ]);
 
     const validIds = validUsers.map((u) => String(u._id));
@@ -538,15 +564,16 @@ export const addCollaborators = async (req, res) => {
           },
         },
       ],
-      { new: true,
+      {
+        new: true,
         updatePipeline: true
       }
-      
+
     ).populate(playlistPopulate);
 
     return res.status(200).json({
       message: "Collaborators added successfully",
-      playlist: mapPlaylist(updated, req.user.id),
+      playlist: await mapPlaylist(updated, req.user.id),
     });
 
   } catch (error) {
@@ -579,7 +606,7 @@ export const removeCollaborator = async (req, res) => {
 
     return res.status(200).json({
       message: "Collaborator removed successfully",
-      playlist: mapPlaylist(updated, req.user.id),
+      playlist: await mapPlaylist(updated, req.user.id),
     });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Server error" });
@@ -662,7 +689,7 @@ export const addTrackToPlaylist = async (req, res) => {
 
     return res.status(200).json({
       message: "Track added to playlist",
-      playlist: mapPlaylist(updated, req.user.id),
+      playlist: await mapPlaylist(updated, req.user.id),
     });
 
   } catch (error) {
@@ -720,7 +747,7 @@ export const removeTrackFromPlaylist = async (req, res) => {
 
     return res.status(200).json({
       message: "Track removed from playlist",
-      playlist: mapPlaylist(updated, req.user.id),
+      playlist: await mapPlaylist(updated, req.user.id),
     });
 
   } catch (error) {
@@ -758,7 +785,7 @@ export const reorderPlaylistTracks = async (req, res) => {
       const samePlaylist = await PlaylistModel.findById(playlist._id).populate(playlistPopulate);
       return res.status(200).json({
         message: "Playlist order unchanged",
-        playlist: mapPlaylist(samePlaylist, req.user.id),
+        playlist: await mapPlaylist(samePlaylist, req.user.id),
       });
     }
 
@@ -773,7 +800,7 @@ export const reorderPlaylistTracks = async (req, res) => {
 
     return res.status(200).json({
       message: "Playlist reordered successfully",
-      playlist: mapPlaylist(updated, req.user.id),
+      playlist: await mapPlaylist(updated, req.user.id),
     });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Server error" });
@@ -798,87 +825,110 @@ export const reorderPlaylistTracks = async (req, res) => {
 export const searchUsersForCollaborators = async (req, res) => {
   try {
     const query = String(req.query.q || "").trim();
+    const currentUserId = String(req.user?.id || req.user?._id || "");
 
     if (!query) {
       return res.status(200).json({ users: [] });
     }
 
-    const users = await UserModel.aggregate([
-      {
-        $search: {
-          index: "user_search_by_displayname_username_email",
-          compound: {
-            should: [
-              // Highest priority → username autocomplete
-              {
-                autocomplete: {
-                  query,
-                  path: "username",
-                  score: { boost: { value: 5 } }
-                }
-              },
+    let users = [];
 
-              // 🔹 Medium priority → email search
-              {
-                text: {
-                  query,
-                  path: "email",
-                  score: { boost: { value: 3 } }
-                }
-              },
+    // 1) Try Atlas Search (best relevance)
+    try {
+      users = await UserModel.aggregate([
+        {
+          $search: {
+            index: "user_search_by_displayname_username_email",
+            compound: {
+              should: [
+                {
+                  autocomplete: {
+                    query,
+                    path: "username",
+                    score: { boost: { value: 5 } },
+                  },
+                },
+                {
+                  text: {
+                    query,
+                    path: "email",
+                    score: { boost: { value: 3 } },
+                  },
+                },
+                {
+                  text: {
+                    query,
+                    path: "displayName",
+                    fuzzy: { maxEdits: 2 },
+                    score: { boost: { value: 2 } },
+                  },
+                },
+              ],
+            },
+          },
+        },
+        {
+          $match: {
+            _id: currentUserId
+              ? { $ne: new mongoose.Types.ObjectId(currentUserId) }
+              : { $exists: true },
+          },
+        },
+        { $limit: 10 },
+        {
+          $project: {
+            _id: 1,
+            username: 1,
+            email: 1,
+            displayName: 1,
+            avatar: 1,
+            avatarKey: 1,
+          },
+        },
+      ]);
+    } catch {
+      // ignore and fallback below
+    }
 
-              // Flexible → displayName with typo tolerance
-              {
-                text: {
-                  query,
-                  path: "displayName",
-                  fuzzy: { maxEdits: 2 },
-                  score: { boost: { value: 2 } }
-                }
-              }
-            ]
+    // 2) Fallback for local MongoDB OR empty Atlas result
+    if (!users.length) {
+      const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      users = await UserModel.find({
+        ...(currentUserId ? { _id: { $ne: currentUserId } } : {}),
+        $or: [
+          { username: regex },
+          { email: regex },
+          { displayName: regex },
+        ],
+      })
+        .select("_id username email displayName avatar avatarKey")
+        .limit(10)
+        .lean();
+    }
+
+    const mappedUsers = await Promise.all(
+      users.map(async (user) => {
+        let avatar = user.avatar || "";
+        const avatarKey = user.avatarKey || getS3KeyFromUrl(user.avatar);
+        if (avatarKey) {
+          try {
+            avatar = await getPresignedGetUrl(avatarKey, 86400);
+          } catch {
+            // keep legacy URL if signing fails
           }
         }
-      },
 
-      // exclude current user
-      {
-        $match: {
-          _id: { $ne: req.user._id }
-        }
-      },
+        return {
+          id: String(user._id),
+          username: user.username,
+          email: user.email,
+          displayName: user.displayName,
+          avatar,
+        };
+      })
+    );
 
-      // add relevance score (optional but useful)
-      {
-        $addFields: {
-          score: { $meta: "searchScore" }
-        }
-      },
-
-      // top results only
-      { $limit: 10 },
-
-      // return only required fields
-      {
-        $project: {
-          _id: 1,
-          username: 1,
-          email: 1,
-          displayName: 1,
-          avatar: 1
-        }
-      }
-    ]);
-
-    return res.status(200).json({
-      users: users.map((user) => ({
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        displayName: user.displayName,
-        avatar: user.avatar || "",
-      })),
-    });
+    return res.status(200).json({ users: mappedUsers });
 
   } catch (error) {
     return res.status(500).json({
@@ -902,7 +952,7 @@ export const searchTracksForPlaylist = async (req, res) => {
     }
 
     const tracks = await TrackModel.find(filter)
-      .select("title duration coverImage primaryArtist artists album")
+      .select("title duration coverImage coverImageKey primaryArtist artists album")
       .populate("primaryArtist", "stageName")
       .populate("artists", "stageName")
       .populate("album", "title")
@@ -920,20 +970,28 @@ export const searchTracksForPlaylist = async (req, res) => {
       }
     }
 
-    const data = tracks
-      .filter((track) => !excludedTrackIds.has(String(track._id)))
-      .map((track) => ({
-        id: track._id,
-        title: track.title,
-        duration: formatDuration(track.duration),
-        durationSeconds: track.duration,
-        image: track.coverImage || "",
-        album: track.album?.title || "Single",
-        artist:
-          track.primaryArtist?.stageName ||
-          track.artists?.[0]?.stageName ||
-          "Unknown artist",
-      }));
+    const data = await Promise.all(
+      tracks
+        .filter((track) => !excludedTrackIds.has(String(track._id)))
+        .map(async (track) => {
+          const imageKey = track.coverImageKey || getS3KeyFromUrl(track.coverImage);
+          const image = imageKey
+            ? await getPresignedGetUrl(imageKey, 86400)
+            : track.coverImage || "";
+          return {
+            id: track._id,
+            title: track.title,
+            duration: formatDuration(track.duration),
+            durationSeconds: track.duration,
+            image,
+            album: track.album?.title || "Single",
+            artist:
+              track.primaryArtist?.stageName ||
+              track.artists?.[0]?.stageName ||
+              "Unknown artist",
+          };
+        })
+    );
 
     return res.status(200).json({ tracks: data });
   } catch (error) {
@@ -978,8 +1036,8 @@ export const getUserPlaylists = async (req, res) => {
       .populate(playlistPopulate);
 
     return res.status(200).json({
-      playlists: playlists.map((playlist) =>
-        mapPlaylist(playlist, userId)
+      playlists: await Promise.all(
+        playlists.map((playlist) => mapPlaylist(playlist, userId))
       ),
     });
 

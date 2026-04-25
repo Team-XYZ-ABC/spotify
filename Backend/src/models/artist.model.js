@@ -52,7 +52,6 @@ const artistSchema = new mongoose.Schema(
     stageName: {
       type: String,
       trim: true,
-      required: true,
     },
 
     // Genres associated with the artist (used for filtering and search)
@@ -137,6 +136,7 @@ const artistSchema = new mongoose.Schema(
     slug: {
       type: String,
       unique: true,
+      sparse: true, // Allows multiple null values for non-artist users
     },
   },
   {

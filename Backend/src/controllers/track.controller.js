@@ -1,7 +1,7 @@
-import { uploadFile } from "../services/imagekit.service.js";
 import TrackModel from "../models/track.model.js";
 import { generateISRC } from "../utils.js";
-import imagekit from "../configs/imagekit.config.js";
+import { getCloudFrontSignedUrl, getCloudFrontUrl, deleteS3Object, getPresignedGetUrl, getS3KeyFromUrl } from "../services/s3.service.js";
+import CONFIG from "../configs/env.config.js";
 import ArtistModel from "../models/artist.model.js";
 import albumModel from "../models/album.model.js";
 
@@ -27,9 +27,17 @@ export const getTrack = async (req, res) => {
       });
     }
 
+    const trackData = track.toObject();
+
+    // Replace cover image with a fresh presigned GET URL
+    const imageKey = trackData.coverImageKey || getS3KeyFromUrl(trackData.coverImage);
+    if (imageKey) {
+      trackData.coverImage = await getPresignedGetUrl(imageKey, 86400); // 24 hours
+    }
+
     res.status(200).json({
       message: "Track fetched successfully",
-      data: track,
+      data: trackData,
     });
 
   } catch (error) {
@@ -39,8 +47,27 @@ export const getTrack = async (req, res) => {
   }
 };
 
-export const streamTrack = (req, res) => {
-  res.send("STREAM TRACK");
+export const streamTrack = async (req, res) => {
+  try {
+    const { trackId } = req.params;
+
+    const track = await TrackModel.findById(trackId).select("audioFileId audioUrl isPublished");
+
+    if (!track) {
+      return res.status(404).json({ message: "Track not found" });
+    }
+
+    // If we have an S3 key, generate a short-lived presigned S3 GET URL
+    if (track.audioFileId) {
+      const streamUrl = await getPresignedGetUrl(track.audioFileId, 3600); // 1 hour
+      return res.status(200).json({ streamUrl });
+    }
+
+    // Fallback: return the stored URL as-is (legacy tracks)
+    return res.status(200).json({ streamUrl: track.audioUrl });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const likeTrack = (req, res) => {
@@ -65,12 +92,10 @@ export const getTrackRecommendations = (req, res) => {
 
 export const uploadTrack = async (req, res) => {
   try {
-    const audioFile = req.files?.file?.[0];
-    const coverImageFile = req.files?.coverImage?.[0];
-    const file = audioFile;
-
     const {
       title,
+      audioKey,        // S3 key returned from /upload/presigned-url
+      coverImageKey,   // S3 key for cover image (optional)
       artists,
       album,
       genres,
@@ -79,14 +104,15 @@ export const uploadTrack = async (req, res) => {
       copyrightOwner,
       isrc,
       availableCountries,
-      coverImage,
-      audioFileId
+      duration,
     } = req.body;
 
     const primaryArtist = req.user.id;
 
-    if (!file) {
-      return res.status(400).json({ message: "No file provided" });
+    if (!audioKey) {
+      return res.status(400).json({
+        message: "audioKey is required (upload the file first via /upload/presigned-url)",
+      });
     }
 
     if (!title) {
@@ -95,11 +121,9 @@ export const uploadTrack = async (req, res) => {
       });
     }
 
-    const result = await uploadFile(
-      file.buffer,
-      file.originalname,
-      "uploads/track"
-    );
+    // Store CloudFront URL as the playback URL
+    const audioUrl = getCloudFrontUrl(audioKey);
+    const coverImage = coverImageKey ? getCloudFrontUrl(coverImageKey) : null;
 
     let coverImageUrl = null;
 
@@ -115,28 +139,27 @@ export const uploadTrack = async (req, res) => {
 
     const track = await TrackModel.create({
       title,
-      duration: result.duration,
-      audioUrl: result.url,
+      audioUrl,
+      audioFileId: audioKey, // S3 key — used for deletion and re-signing
+
+      duration: duration || 0,
 
       primaryArtist,
-      artists: artists ? JSON.parse(artists) : [primaryArtist],
+      artists: artists?.length ? artists : [primaryArtist],
 
       album: album || null,
-      genres: genres ? JSON.parse(genres) : [],
+      genres: genres || [],
       lang: lang || null,
 
-      isExplicit: isExplicit === "true",
-
-      audioFileId: result.fileId,
+      isExplicit: Boolean(isExplicit),
 
       copyrightOwner: copyrightOwner || null,
       isrc: isrc || generateISRC(),
 
-      availableCountries: availableCountries
-        ? JSON.parse(availableCountries)
-        : [],
+      availableCountries: availableCountries || [],
 
-      coverImage: coverImageUrl,
+      coverImage,
+      coverImageKey: coverImageKey || null,
     });
 
     res.status(201).json({
@@ -154,21 +177,6 @@ export const uploadTrack = async (req, res) => {
 export const updateTrack = async (req, res) => {
   try {
     const { trackId } = req.params;
-    const coverImageFile = req.files?.coverImage?.[0];
-
-    const {
-      title,
-      artists,
-      album,
-      genres,
-      lang,
-      isExplicit,
-      copyrightOwner,
-      isrc,
-      availableCountries,
-      coverImage
-    } = req.body;
-
     const userId = req.user.id;
 
     const track = await TrackModel.findById(trackId);
@@ -197,29 +205,15 @@ export const updateTrack = async (req, res) => {
 
     const updateData = {};
 
-    if (title) updateData.title = title;
-
-    if (artists) updateData.artists = JSON.parse(artists);
-
-    if (album) updateData.album = album;
-
-    if (genres) updateData.genres = JSON.parse(genres);
-
-    if (lang) updateData.lang = lang;
-
-    if (isExplicit !== undefined)
-      updateData.isExplicit = isExplicit === "true";
-
-    if (copyrightOwner) updateData.copyrightOwner = copyrightOwner;
-
-    if (isrc) updateData.isrc = isrc;
-
-    if (availableCountries)
-      updateData.availableCountries = JSON.parse(availableCountries);
-
-    if (coverImageFile) {
-      updateData.coverImage = coverImageUrl;
+    if (req.body.title) updateData.title = req.body.title;
+    if (req.body.artists) updateData.artists = req.body.artists;
+    if (req.body.genres) updateData.genres = req.body.genres;
+    if (req.body.lang) updateData.lang = req.body.lang;
+    if (req.body.coverImageKey) {
+      updateData.coverImage = getCloudFrontUrl(req.body.coverImageKey);
+      updateData.coverImageKey = req.body.coverImageKey;
     }
+
     const updatedTrack = await TrackModel.findByIdAndUpdate(
       trackId,
       updateData,
@@ -257,10 +251,9 @@ export const deleteTrack = async (req, res) => {
 
     if (track.audioFileId) {
       try {
-        await imagekit.files.deleteFile(track.audioFileId);
-        console.log("ImageKit file deleted");
+        await deleteS3Object(track.audioFileId);
       } catch (err) {
-        console.log("ImageKit delete failed:", err.message);
+        console.log("S3 audio delete failed:", err.message);
       }
     }
 
@@ -274,5 +267,54 @@ export const deleteTrack = async (req, res) => {
     res.status(500).json({
       message: error.message,
     });
+  }
+};
+
+export const getMyTracks = async (req, res) => {
+  try {
+    const artistId = req.user.id;
+
+    const tracks = await TrackModel.find({ primaryArtist: artistId })
+      .sort({ createdAt: -1 })
+      .select("title artists album genres lang isExplicit copyrightOwner isrc availableCountries duration coverImage coverImageKey createdAt updatedAt")
+      .lean();
+
+    const data = await Promise.all(
+      tracks.map(async (track) => {
+        let coverImage = track.coverImage || "";
+        const imageKey = track.coverImageKey || getS3KeyFromUrl(track.coverImage);
+        if (imageKey) {
+          try {
+            coverImage = await getPresignedGetUrl(imageKey, 86400);
+          } catch {
+            // Keep legacy URL if signing fails
+          }
+        }
+
+        return {
+          id: String(track._id),
+          title: track.title,
+          artists: track.artists || [],
+          album: track.album || null,
+          genres: track.genres || [],
+          lang: track.lang || null,
+          isExplicit: Boolean(track.isExplicit),
+          copyrightOwner: track.copyrightOwner || null,
+          isrc: track.isrc || null,
+          availableCountries: track.availableCountries || [],
+          durationSeconds: Number(track.duration) || 0,
+          coverImage,
+          createdAt: track.createdAt,
+          updatedAt: track.updatedAt,
+        };
+      })
+    );
+
+    res.status(200).json({
+      message: "Tracks fetched successfully",
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
