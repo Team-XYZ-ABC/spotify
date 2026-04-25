@@ -75,7 +75,7 @@ const Navbar = ({ toggleSidebar }) => {
 
             {/* Search Results Dropdown */}
             {showDropdown && search.trim() !== "" && (
-              <div className="absolute top-full -left-10 mt-4 p-2 w-[calc(100%+80px)] bg-[#282828] rounded-md shadow-xl z-50 py-2 max-h-[70vh] overflow-y-auto">
+              <div className="absolute top-full -left-10 mt-4 p-2 w-[calc(100%+80px)] bg-[#121212] rounded-md shadow-xl z-50 py-2 max-h-[60vh] overflow-y-auto">
                 {isLoading ? (
                   <div className="px-4 py-3 text-sm text-gray-400">Searching...</div>
                 ) : hasResults ? (

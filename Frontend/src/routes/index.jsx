@@ -17,6 +17,7 @@ import UploadTrack from "../pages/user/Artist/UploadTrack";
 import Playlist from "../pages/Playlist/Playlist";
 import PlaylistList from "../pages/Playlist/PlaylistList";
 import AccountPage from "../pages/user/account/AccountPage";
+import ViewTrack from "../pages/track/ViewTrack";
 
 // --- Lazy Loads ---
 const Home = lazy(() => import("../pages/home/Home"));
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
                 children: [
                     // Just drop public paths here in the future
                     // { path: "/about", element: <About /> },
+                    {
+                        path: "/track/:trackId",
+                        element: <ViewTrack/>
+                    }
                 ],
             },
 
