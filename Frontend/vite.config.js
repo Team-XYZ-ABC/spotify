@@ -11,12 +11,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': '/src',
-      '@components': '/src/components',
-      '@pages': '/src/pages',
-      '@configs': '/src/configs',
-      '@utils': '/src/utils',
-      '@hooks': '/src/hooks',
+      '@': path.resolve(__dirname, 'src'),
+      '@app': path.resolve(__dirname, 'src/app'),
+      '@shared': path.resolve(__dirname, 'src/shared'),
+      '@features': path.resolve(__dirname, 'src/features'),
     },
   },
 })

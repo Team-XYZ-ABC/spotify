@@ -1,31 +1,34 @@
-import CONFIG from '../configs/env.config.js'
-import jwt from 'jsonwebtoken'
-import {
-    jwtVerify
-} from '../services/jwt.service.js'
+import { jwtVerify } from "../utils/jwt.util.js";
+import config from "../config/index.js";
+import ApiError from "../core/http/api-error.js";
 
-const isAuthenticated = async (req, res, next) => {
+/**
+ * Require a valid auth cookie. Attaches `req.user = { id, role }`.
+ */
+const isAuthenticated = (req, res, next) => {
     try {
-        const token = req.cookies?.token
-
-        if (!token) {
-            return res.status(401).json({
-                message: "Unauthorized - Please login!",
-                success: false
-            })
-        }
-
-        const decoded = jwtVerify(token, CONFIG.JWT_SECRET_KEY)
-        req.user = decoded
-
-        next()
-
-    } catch (error) {
-        return res.status(401).json({
-            message: "Unauthorized",
-            success: false
-        })
+        const token = req.cookies?.[config.auth.cookieName];
+        if (!token) throw ApiError.unauthorized("Unauthorized - Please login!");
+        req.user = jwtVerify(token);
+        next();
+    } catch (err) {
+        if (err instanceof ApiError) return next(err);
+        next(ApiError.unauthorized("Unauthorized"));
     }
-}
+};
 
-export default isAuthenticated
+/**
+ * Optional auth — attaches `req.user` if a valid token is present
+ * but never rejects the request.
+ */
+export const optionalAuth = (req, res, next) => {
+    try {
+        const token = req.cookies?.[config.auth.cookieName];
+        if (token) req.user = jwtVerify(token);
+    } catch {
+        // ignore — keep req.user undefined
+    }
+    next();
+};
+
+export default isAuthenticated;

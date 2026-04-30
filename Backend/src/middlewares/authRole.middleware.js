@@ -1,32 +1,16 @@
-const authRole = (roles = []) => {
+import ApiError from "../core/http/api-error.js";
 
-    return (req, res, next) => {
-        try {
-            console.log(req.user)
-            if (!req.user) {
-                return res.status(401).json({
-                    success: false,
-                    message: "Unauthorized - User not logged in"
-                });
-            }
-
-            if (!roles.includes(req.user.role)) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Forbidden - You don't have permission"
-                });
-            }
-
-            next();
-
-        } catch (error) {
-            return res.status(500).json({
-                success: false,
-                message: "Server error",
-                error: error.message
-            });
-        }
-    };
+/**
+ * Role-based access guard. Use AFTER `isAuthenticated`.
+ *
+ *   router.get("/admin", isAuthenticated, authRole(["admin"]), handler);
+ */
+const authRole = (roles = []) => (req, res, next) => {
+    if (!req.user) return next(ApiError.unauthorized("Unauthorized - User not logged in"));
+    if (!roles.includes(req.user.role)) {
+        return next(ApiError.forbidden("Forbidden - You don't have permission"));
+    }
+    next();
 };
 
 export default authRole;
