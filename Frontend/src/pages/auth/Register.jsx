@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import TermsandPolicy from "../../components/ui/TermsandPolicy";
 import { Link, useNavigate } from "react-router";
 import useAuth from "../../hooks/useAuth";
+import { emailSchema, validate } from "../../validators";
 
 const Register = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const { handleEmailVerify, loading, error, clearError } = useAuth();
-  console.log(loading);
 
   useEffect(() => {
     document.title = "Sign-up - Spotify";
@@ -36,25 +37,24 @@ const Register = () => {
           </label>
           <input
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
             type="text"
             id="email"
             placeholder="name@domain.com"
             className="bg-transparent border border-gray-500 p-3 rounded-md focus:outline-none focus:border-white"
           />
+          {emailError && <p className="text-red-400 text-xs">{emailError}</p>}
         </div>
 
         {error && <p className="text-red-500">{error}</p>}
-        {/* 
-        <Link
-          to={"/register/phoneRegister"}
-          className="text-green-500 underline text-sm cursor-pointer hover:underline"
-        >
-          Use phone number instead.
-        </Link> */}
 
         <button
-          onClick={() => handleEmailVerify(email)}
+          onClick={() => {
+            const { errors } = validate(emailSchema, { email });
+            if (errors) { setEmailError(errors.email); return; }
+            setEmailError("");
+            handleEmailVerify(email);
+          }}
           disabled={loading}
           className="bg-green-500 w-full cursor-pointer text-black font-bold py-3 rounded-full active:scale-95 transition"
         >

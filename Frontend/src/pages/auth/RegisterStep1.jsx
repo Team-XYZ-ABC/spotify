@@ -3,6 +3,7 @@ import TermsandPolicy from "../../components/ui/TermsandPolicy";
 import { Link, useNavigate } from "react-router";
 import { useSearchParams } from "react-router";
 import useAuth from "../../hooks/useAuth";
+import { registerSchema, validate } from "../../validators";
 
 const RegisterStep1 = () => {
     const navigate = useNavigate()
@@ -25,6 +26,7 @@ const RegisterStep1 = () => {
 
     const { registerUser, loading, error } = useAuth();
     const [strength, setStrength] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
 
 
     const handleChange = (e) => {
@@ -68,6 +70,7 @@ const RegisterStep1 = () => {
                         placeholder="Your name"
                         className="bg-transparent border border-gray-500 p-3 rounded-md focus:outline-none focus:border-white"
                     />
+                    {fieldErrors.displayName && <p className="text-red-400 text-xs">{fieldErrors.displayName}</p>}
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -80,6 +83,7 @@ const RegisterStep1 = () => {
                         placeholder="username"
                         className="bg-transparent border border-gray-500 p-3 rounded-md focus:outline-none focus:border-white"
                     />
+                    {fieldErrors.username && <p className="text-red-400 text-xs">{fieldErrors.username}</p>}
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -95,17 +99,17 @@ const RegisterStep1 = () => {
 
                     {form.password && (
                         <p
-                            className={`text-sm font-semibold ${
-                                strength === "Weak"
+                            className={`text-sm font-semibold ${strength === "Weak"
                                     ? "text-red-500"
                                     : strength === "Medium"
-                                    ? "text-yellow-500"
-                                    : "text-green-500"
-                            }`}
+                                        ? "text-yellow-500"
+                                        : "text-green-500"
+                                }`}
                         >
                             {strength} Password
                         </p>
                     )}
+                    {fieldErrors.password && <p className="text-red-400 text-xs">{fieldErrors.password}</p>}
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -117,22 +121,20 @@ const RegisterStep1 = () => {
                         <button
                             onClick={() =>
                                 setForm({ ...form, role: "listener" })}
-                            className={`flex-1 py-2 rounded-md cursor-pointer border ${
-                                form.role === "listener"
+                            className={`flex-1 py-2 rounded-md cursor-pointer border ${form.role === "listener"
                                     ? "bg-green-500 text-black border-green-500"
                                     : "border-gray-500"
-                            }`}
+                                }`}
                         >
                             Listener
                         </button>
 
                         <button
                             onClick={() => setForm({ ...form, role: "artist" })}
-                            className={`flex-1 py-2 rounded-md cursor-pointer border ${
-                                form.role === "artist"
+                            className={`flex-1 py-2 rounded-md cursor-pointer border ${form.role === "artist"
                                     ? "bg-green-500 text-black border-green-500"
                                     : "border-gray-500"
-                            }`}
+                                }`}
                         >
                             Artist
                         </button>
@@ -143,12 +145,18 @@ const RegisterStep1 = () => {
                     <p className="text-red-500 text-sm">{error}</p>
                 )}
 
-                    <button
-                        onClick={() => registerUser(form)}
-                        className="bg-green-500 w-full cursor-pointer text-black font-bold py-3 rounded-full active:scale-95 transition"
-                    >
-                        Create Account
-                    </button>
+                <button
+                    onClick={() => {
+                        const { values, errors } = validate(registerSchema, form);
+                        if (errors) { setFieldErrors(errors); return; }
+                        setFieldErrors({});
+                        registerUser(values);
+                    }}
+                    disabled={loading}
+                    className="bg-green-500 w-full cursor-pointer text-black font-bold py-3 rounded-full active:scale-95 transition disabled:opacity-60"
+                >
+                    {loading ? "Creating..." : "Create Account"}
+                </button>
             </div>
             <div className="flex flex-col gap-10">
                 <TermsandPolicy />

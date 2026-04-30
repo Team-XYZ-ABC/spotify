@@ -3,11 +3,13 @@ import { Link } from "react-router";
 import TermsandPolicy from "../../components/ui/TermsandPolicy";
 import useAuth from "../../hooks/useAuth";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { loginSchema, validate } from "../../validators";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const { loginUser, loading, error, clearError } = useAuth();
 
@@ -17,12 +19,13 @@ const Login = () => {
   }, [clearError]);
 
   const handleLogin = () => {
-    if (!email || !password) {
-      alert("Email and Password are required");
+    const { values, errors } = validate(loginSchema, { email, password });
+    if (errors) {
+      setFieldErrors(errors);
       return;
     }
-
-    loginUser({ email, password });
+    setFieldErrors({});
+    loginUser(values);
   };
 
   return (
@@ -53,10 +56,11 @@ const Login = () => {
               type="email"
               id="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: "" })); }}
               placeholder="name@domain.com"
               className="bg-transparent border border-gray-500 p-3 rounded-md focus:outline-none focus:border-white w-full transition-colors"
             />
+            {fieldErrors.email && <p className="text-red-400 text-xs">{fieldErrors.email}</p>}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -68,7 +72,7 @@ const Login = () => {
                 type={showPassword ? "text" : "password"}
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: "" })); }}
                 placeholder="Password"
                 className="bg-transparent p-3 pr-10 w-full focus:outline-none"
               />
@@ -80,6 +84,7 @@ const Login = () => {
                 {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </button>
             </div>
+            {fieldErrors.password && <p className="text-red-400 text-xs">{fieldErrors.password}</p>}
           </div>
         </div>
 

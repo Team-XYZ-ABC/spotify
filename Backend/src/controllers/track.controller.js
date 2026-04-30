@@ -125,18 +125,6 @@ export const uploadTrack = async (req, res) => {
     const audioUrl = getCloudFrontUrl(audioKey);
     const coverImage = coverImageKey ? getCloudFrontUrl(coverImageKey) : null;
 
-    let coverImageUrl = null;
-
-    if (coverImageFile) {
-      const coverResult = await uploadFile(
-        coverImageFile.buffer,
-        coverImageFile.originalname,
-        "uploads/covers"
-      );
-
-      coverImageUrl = coverResult.url;
-    }
-
     const track = await TrackModel.create({
       title,
       audioUrl,
@@ -189,18 +177,6 @@ export const updateTrack = async (req, res) => {
       return res.status(403).json({
         message: "You can only update your own track",
       });
-    }
-
-    let coverImageUrl;
-
-    if (coverImageFile) {
-      const coverResult = await uploadFile(
-        coverImageFile.buffer,
-        coverImageFile.originalname,
-        "uploads/covers"
-      );
-
-      coverImageUrl = coverResult.url;
     }
 
     const updateData = {};
