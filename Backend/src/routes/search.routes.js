@@ -1,19 +1,21 @@
 import { Router } from "express";
-import { globalSearch, searchAlbums, searchArtists, searchPlaylists, searchSuggestions, searchTracks } from "../controllers/search.controller.js";
+import { searchAll } from "../controllers/search.controller.js";
 
 
 const searchRouter = Router();
 
-searchRouter.get("/", globalSearch);
+// searchRouter.get("/", globalSearch);
 
-searchRouter.get("/tracks", searchTracks);
+// searchRouter.get("/tracks", searchTracks);
 
-searchRouter.get("/artists", searchArtists);
+// searchRouter.get("/artists", searchArtists);
 
-searchRouter.get("/albums", searchAlbums);
+// searchRouter.get("/albums", searchAlbums);
 
-searchRouter.get("/playlists", searchPlaylists);
+// searchRouter.get("/playlists", searchPlaylists);
 
-searchRouter.get("/suggestions", searchSuggestions);
+// searchRouter.get("/suggestions", searchSuggestions);
+
+searchRouter.get("/" , searchAll)
 
 export default searchRouter;
