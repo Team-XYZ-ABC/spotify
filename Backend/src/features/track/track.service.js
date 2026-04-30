@@ -1,9 +1,10 @@
 import * as trackDao from "./track.dao.js";
 import ApiError from "../../lib/api-error.js";
-import { getReadUrl, deleteObject } from "../../lib/storage.js";
+import { getReadUrl, deleteObject, deletePrefix } from "../../lib/storage.js";
 import { signObjectUrl, publicUrl } from "../../utils/media-url.util.js";
 import { generateISRC } from "../../utils/isrc.util.js";
 import { URL_TTL } from "../../constants.js";
+import config from "../../config.js";
 
 const getTrack = async (trackId) => {
     if (!trackId) throw ApiError.badRequest("Track ID is required");
@@ -16,13 +17,23 @@ const getTrack = async (trackId) => {
 
 const getStreamUrl = async (trackId) => {
     const track = await trackDao.findById(trackId, {
-        select: "audioFileId audioUrl isPublished",
+        select: "audioFileId audioUrl isPublished hls status",
     });
     if (!track) throw ApiError.notFound("Track not found");
-    if (track.audioFileId) {
-        return getReadUrl(track.audioFileId, URL_TTL.ONE_HOUR);
+
+    // Prefer HLS master playlist when processing has finished.
+    // Route through our backend proxy so CloudFront signed-URL requirements
+    // don't break hls.js — the proxy rewrites segment paths to presigned S3 URLs.
+    if (track.status === "ready" && track.hls?.master) {
+        const proxyUrl = `${config.serverUrl}${config.apiPrefix}/songs/hls/${trackId}/master.m3u8`;
+        return { streamUrl: proxyUrl, type: "hls" };
     }
-    return track.audioUrl;
+
+    if (track.audioFileId) {
+        const url = await getReadUrl(track.audioFileId, URL_TTL.ONE_HOUR);
+        return { streamUrl: url, type: "mp3" };
+    }
+    return { streamUrl: track.audioUrl, type: "mp3" };
 };
 
 const createTrack = async (payload, userId) => {
@@ -87,6 +98,13 @@ const deleteTrack = async (trackId, userId) => {
             console.warn("[track] audio object delete failed:", err.message);
         }
     }
+    if (track.hls?.basePath) {
+        try {
+            await deletePrefix(track.hls.basePath);
+        } catch (err) {
+            console.warn("[track] HLS prefix delete failed:", err.message);
+        }
+    }
     await trackDao.deleteById(trackId);
 };
 
@@ -106,6 +124,10 @@ const listMyTracks = async (artistId) => {
             availableCountries: track.availableCountries || [],
             durationSeconds: Number(track.duration) || 0,
             coverImage: await signObjectUrl(track.coverImageKey, track.coverImage),
+            status: track.status || "ready",
+            progress: typeof track.progress === "number" ? track.progress : 100,
+            statusMessage: track.statusMessage || "",
+            hls: track.hls || null,
             createdAt: track.createdAt,
             updatedAt: track.updatedAt,
         }))

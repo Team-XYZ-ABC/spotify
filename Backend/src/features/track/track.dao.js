@@ -11,6 +11,15 @@ export const findById = (id, opts = {}) => {
 export const updateById = (id, data) =>
     TrackModel.findByIdAndUpdate(id, data, { new: true, runValidators: true }).exec();
 
+export const updateStatus = (id, { status, progress, statusMessage, hls }) => {
+    const update = {};
+    if (status !== undefined) update.status = status;
+    if (progress !== undefined) update.progress = progress;
+    if (statusMessage !== undefined) update.statusMessage = statusMessage;
+    if (hls !== undefined) update.hls = hls;
+    return TrackModel.findByIdAndUpdate(id, update, { new: true }).exec();
+};
+
 export const deleteById = (id) => TrackModel.findByIdAndDelete(id).exec();
 
 export const findWithArtistAndAlbum = (id) =>
@@ -23,7 +32,7 @@ export const findByArtist = (primaryArtist) =>
     TrackModel.find({ primaryArtist })
         .sort({ createdAt: -1 })
         .select(
-            "title artists album genres lang isExplicit copyrightOwner isrc availableCountries duration coverImage coverImageKey createdAt updatedAt"
+            "title artists album genres lang isExplicit copyrightOwner isrc availableCountries duration coverImage coverImageKey status progress statusMessage hls createdAt updatedAt"
         )
         .lean()
         .exec();

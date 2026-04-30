@@ -25,6 +25,23 @@ const trackSchema = new mongoose.Schema(
         isPublished: { type: Boolean, default: true },
         audioFileId: { type: String, required: true },
         coverImageKey: { type: String, default: null },
+
+        // HLS pipeline state
+        status: {
+            type: String,
+            enum: ["uploading", "processing", "chunking", "uploading_chunks", "ready", "failed"],
+            default: "ready",
+            index: true,
+        },
+        progress: { type: Number, default: 100, min: 0, max: 100 },
+        statusMessage: { type: String, default: "" },
+        hls: {
+            master: { type: String, default: null },
+            low: { type: String, default: null },
+            medium: { type: String, default: null },
+            high: { type: String, default: null },
+            basePath: { type: String, default: null },
+        },
     },
     { timestamps: true }
 );

@@ -2,12 +2,37 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTrack } from "@/features/track/hooks/useTrack";
 import usePlayer from "@/features/player/hooks/usePlayer";
 import UploadSongForm from "@/shared/components/ui/UploadSongForm";
+import api from "@/shared/config/axios.config";
 
 const formatDuration = (seconds = 0) => {
     const s = Number.isFinite(Number(seconds)) ? Math.max(0, Math.floor(Number(seconds))) : 0;
     const m = Math.floor(s / 60);
     const r = s % 60;
     return `${m}:${String(r).padStart(2, "0")}`;
+};
+
+const StatusBadge = ({ status, progress }) => {
+    if (!status || status === "ready") {
+        return (
+            <span className="inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-300 px-2 py-0.5 text-[10px] font-semibold">
+                Ready
+            </span>
+        );
+    }
+    if (status === "failed") {
+        return (
+            <span className="inline-flex items-center rounded-full bg-rose-500/15 text-rose-300 px-2 py-0.5 text-[10px] font-semibold">
+                Failed
+            </span>
+        );
+    }
+    return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 text-amber-300 px-2 py-0.5 text-[10px] font-semibold">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-300 animate-pulse" />
+            {status === "uploading_chunks" ? "Publishing" : status}
+            {typeof progress === "number" ? ` ${progress}%` : ""}
+        </span>
+    );
 };
 
 const Songs = () => {
@@ -34,6 +59,88 @@ const Songs = () => {
         loadSongs();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Live progress for any song still in flight (subscribe via SSE per song,
+    // with polling fallback for environments where EventSource is blocked).
+    useEffect(() => {
+        const inflight = songs.filter(
+            (s) => s.status && s.status !== "ready" && s.status !== "failed"
+        );
+        if (inflight.length === 0) return;
+
+        const base =
+            import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+
+        const applyUpdate = (songId, data) => {
+            setSongs((prev) =>
+                prev.map((row) =>
+                    String(row.id || row._id) === songId
+                        ? {
+                            ...row,
+                            status: data.status,
+                            progress: data.progress,
+                            statusMessage: data.statusMessage,
+                            hls: data.hls || row.hls,
+                        }
+                        : row
+                )
+            );
+        };
+
+        const subscriptions = inflight.map((s) => {
+            const songId = String(s.id || s._id);
+            let stopped = false;
+            let pollTimer = null;
+
+            const startPolling = () => {
+                if (pollTimer) return;
+                pollTimer = setInterval(async () => {
+                    if (stopped) return clearInterval(pollTimer);
+                    try {
+                        const res = await api.get(`/songs/status/${songId}`);
+                        const data = res.data?.data || res.data;
+                        applyUpdate(songId, data);
+                        if (data.status === "ready" || data.status === "failed") {
+                            stopped = true;
+                            clearInterval(pollTimer);
+                        }
+                    } catch {
+                        /* keep trying */
+                    }
+                }, 2000);
+            };
+
+            let es;
+            try {
+                es = new EventSource(`${base}/songs/progress/${songId}`, {
+                    withCredentials: true,
+                });
+                es.onmessage = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.data);
+                        applyUpdate(songId, data);
+                        if (data.status === "ready" || data.status === "failed") {
+                            stopped = true;
+                            es.close();
+                        }
+                    } catch { /* ignore */ }
+                };
+                es.onerror = () => {
+                    if (es.readyState === EventSource.CLOSED) startPolling();
+                };
+            } catch {
+                startPolling();
+            }
+
+            return () => {
+                stopped = true;
+                if (es) es.close();
+                if (pollTimer) clearInterval(pollTimer);
+            };
+        });
+
+        return () => subscriptions.forEach((stop) => stop());
+    }, [songs.map((s) => `${s.id}:${s.status}`).join("|")]);
 
     const sortedSongs = useMemo(
         () => [...songs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
@@ -177,6 +284,9 @@ const Songs = () => {
                             </div>
 
                             <div className="md:col-span-2 text-xs text-zinc-400 space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <StatusBadge status={song.status} progress={song.progress} />
+                                </div>
                                 <p>Lang: {song.lang || "-"}</p>
                                 <p>Genre: {song.genres?.[0] || "-"}</p>
                                 <p>ISRC: {song.isrc || "Auto"}</p>

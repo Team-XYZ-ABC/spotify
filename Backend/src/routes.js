@@ -12,11 +12,13 @@ import playerRouter from "./features/player/player.routes.js";
 import recommendationRouter from "./features/recommendation/recommendation.routes.js";
 import uploadRouter from "./features/upload/upload.routes.js";
 import adminRouter from "./features/admin/admin.routes.js";
+import songRouter from "./features/song/song.routes.js";
 
 const router = Router();
 
 router.use("/auth", authRouter);
 router.use("/upload", uploadRouter);
+router.use("/songs", songRouter);
 router.use("/users", userRouter);
 router.use("/artists", artistRouter);
 router.use("/tracks", trackRouter);

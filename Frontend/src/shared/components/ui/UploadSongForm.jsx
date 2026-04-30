@@ -5,7 +5,7 @@ import FileUploader from "@/shared/components/common/FileUploader";
 import Dropdown from "@/shared/components/common/Dropdown";
 import ConfirmationDialog from "@/shared/components/ui/ConfirmationDialog";
 import { COUNTRIES, GENRES, LANGUAGES } from "@/features/search/data/DropDownSuggestions";
-import { useTrack } from "@/features/track/hooks/useTrack"; 
+import { useTrack } from "@/features/track/hooks/useTrack";
 
 const initialState = {
     title: "",
@@ -33,7 +33,7 @@ const UploadSongForm = ({ isOpen, onClose }) => {
     const [errorMsg, setErrorMsg] = useState("");
     const [showConfirmation, setShowConfirmation] = useState(false);
 
-    const { uploadTrack, loading, error } = useTrack();
+    const { uploadTrack, loading, error, uploadProgress, processingProgress } = useTrack();
 
     const hasUnsavedChanges = () => {
         return (
@@ -116,7 +116,7 @@ const UploadSongForm = ({ isOpen, onClose }) => {
         try {
             setErrorMsg("");
 
-            await uploadTrack(formData); 
+            await uploadTrack(formData);
 
             setFormData(initialState);
             setCoverPreview(null);
@@ -386,6 +386,49 @@ const UploadSongForm = ({ isOpen, onClose }) => {
                     </div>
                 )}
 
+                {loading && (
+                    <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 mb-3 md:mb-4">
+                        <div className="bg-white/3 border border-white/10 rounded-lg p-3 md:p-4 text-xs md:text-sm space-y-2">
+                            <div className="flex items-center justify-between text-zinc-300">
+                                <span className="capitalize font-semibold">
+                                    {processingProgress?.stage === "uploading"
+                                        ? "Uploading to S3"
+                                        : processingProgress?.stage === "processing"
+                                            ? "Transcoding"
+                                            : processingProgress?.stage === "chunking"
+                                                ? "HLS chunking"
+                                                : processingProgress?.stage === "uploading_chunks"
+                                                    ? "Publishing chunks"
+                                                    : processingProgress?.stage === "ready"
+                                                        ? "Ready"
+                                                        : "Processing"}
+                                </span>
+                                <span className="text-zinc-400">
+                                    {Math.round(
+                                        processingProgress?.progress ?? uploadProgress ?? 0
+                                    )}
+                                    %
+                                </span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                    className="h-full bg-linear-to-r from-[#1DB954] to-[#1ed760] transition-all"
+                                    style={{
+                                        width: `${Math.round(
+                                            processingProgress?.progress ?? uploadProgress ?? 0
+                                        )}%`,
+                                    }}
+                                />
+                            </div>
+                            {processingProgress?.statusMessage && (
+                                <p className="text-zinc-500 text-[11px]">
+                                    {processingProgress.statusMessage}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <div className="sticky bottom-0 border-t border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
                     <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-5 flex justify-between items-center gap-3 md:gap-4">
                         <button
@@ -397,11 +440,10 @@ const UploadSongForm = ({ isOpen, onClose }) => {
                         <button
                             onClick={handleSubmit}
                             disabled={loading}
-                            className={`px-6 md:px-8 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold bg-linear-to-r from-[#1DB954] to-[#1ed760] text-black flex items-center gap-2 ${
-                                loading
+                            className={`px-6 md:px-8 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold bg-linear-to-r from-[#1DB954] to-[#1ed760] text-black flex items-center gap-2 ${loading
                                     ? "opacity-60 cursor-not-allowed"
                                     : "hover:from-[#1ed760] hover:to-[#22ff64] shadow-lg"
-                            }`}
+                                }`}
                         >
                             {loading
                                 ? (

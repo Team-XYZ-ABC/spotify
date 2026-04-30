@@ -16,17 +16,50 @@ export const getUploadUrlService = async (payload) => {
 };
 
 /**
- * Upload a file directly to S3 via presigned URL.
- * Uses native fetch — must NOT send auth cookies/headers to S3.
+ * HLS pipeline — get an upload URL specifically for an audio source file.
+ * The backend will later kick off FFmpeg HLS processing.
  */
-export const uploadToS3Service = async (uploadUrl, file) => {
-    const res = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
+export const getSongUploadUrlService = async (payload) => {
+    try {
+        const res = await api.post("/songs/upload-url", payload);
+        return res.data; // { uploadUrl, key }
+    } catch (error) {
+        throw error.response?.data || { message: "Failed to get song upload URL" };
+    }
+};
+
+/**
+ * Upload a file directly to S3 via presigned URL.
+ * Optional onProgress(percent) callback uses XHR for real progress events.
+ */
+export const uploadToS3Service = (uploadUrl, file, onProgress) =>
+    new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && typeof onProgress === "function") {
+                onProgress(Math.round((e.loaded / e.total) * 100));
+            }
+        };
+        xhr.onload = () =>
+            xhr.status >= 200 && xhr.status < 300
+                ? resolve()
+                : reject(new Error(`S3 upload failed (HTTP ${xhr.status})`));
+        xhr.onerror = () => reject(new Error("S3 upload network error"));
+        xhr.send(file);
     });
-    if (!res.ok) {
-        throw { message: `S3 upload failed (HTTP ${res.status})` };
+
+/**
+ * Confirm raw audio upload finished — creates a Track row in "processing"
+ * state and triggers FFmpeg/HLS pipeline server-side.
+ */
+export const confirmSongUploadService = async (payload) => {
+    try {
+        const res = await api.post("/songs/confirm-upload", payload);
+        return res.data; // { data: { id, status, progress } }
+    } catch (error) {
+        throw error.response?.data || { message: "Failed to confirm upload" };
     }
 };
 

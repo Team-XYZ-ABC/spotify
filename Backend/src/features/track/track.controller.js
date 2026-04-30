@@ -8,8 +8,8 @@ export const getTrack = asyncHandler(async (req, res) => {
 });
 
 export const streamTrack = asyncHandler(async (req, res) => {
-    const streamUrl = await trackService.getStreamUrl(req.params.trackId);
-    return res.status(200).json({ streamUrl });
+    const result = await trackService.getStreamUrl(req.params.trackId);
+    return res.status(200).json(result);
 });
 
 export const uploadTrack = asyncHandler(async (req, res) => {

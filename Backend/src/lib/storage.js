@@ -3,6 +3,8 @@ import {
     GetObjectCommand,
     PutObjectCommand,
     DeleteObjectCommand,
+    DeleteObjectsCommand,
+    ListObjectsV2Command,
     PutBucketCorsCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -47,6 +49,48 @@ export const getKeyFromUrl = (url) => {
 
 export const deleteObject = async (key) => {
     await client.send(new DeleteObjectCommand({ Bucket: s3.bucket, Key: key }));
+};
+
+export const uploadObject = async (key, body, contentType) => {
+    await client.send(
+        new PutObjectCommand({
+            Bucket: s3.bucket,
+            Key: key,
+            Body: body,
+            ContentType: contentType,
+        })
+    );
+};
+
+export const downloadObject = async (key) => {
+    const res = await client.send(
+        new GetObjectCommand({ Bucket: s3.bucket, Key: key })
+    );
+    return res.Body; // Readable stream
+};
+
+export const deletePrefix = async (prefix) => {
+    if (!prefix) return;
+    let ContinuationToken;
+    do {
+        const listed = await client.send(
+            new ListObjectsV2Command({
+                Bucket: s3.bucket,
+                Prefix: prefix,
+                ContinuationToken,
+            })
+        );
+        const objects = (listed.Contents || []).map((o) => ({ Key: o.Key }));
+        if (objects.length) {
+            await client.send(
+                new DeleteObjectsCommand({
+                    Bucket: s3.bucket,
+                    Delete: { Objects: objects, Quiet: true },
+                })
+            );
+        }
+        ContinuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+    } while (ContinuationToken);
 };
 
 export const getSignedStreamUrl = (key, expiresIn = 3600) => {

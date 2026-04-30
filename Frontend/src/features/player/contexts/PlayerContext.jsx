@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import Hls from "hls.js";
 import {
     cycleRepeat,
     loadTrack,
@@ -52,21 +53,34 @@ export const PlayerProvider = ({ children }) => {
 
     // Single Audio element — lives for the entire app session
     const audioRef = useRef(new Audio());
+    // Active hls.js instance (if any) — destroyed before each load
+    const hlsRef = useRef(null);
+
+    const detachHls = () => {
+        if (hlsRef.current) {
+            try { hlsRef.current.destroy(); } catch { /* noop */ }
+            hlsRef.current = null;
+        }
+    };
 
     // ─── Core: load a URL into the audio element and play ───────────────
     const loadAndPlay = useCallback(
         async (track) => {
             const audio = audioRef.current;
             audio.pause();
+            detachHls();
+            audio.removeAttribute("src");
             audio.src = "";
 
             let src = track.audioUrl;
+            let type = "mp3";
 
-            // Real backend tracks: fetch a short-lived presigned URL
+            // Real backend tracks: fetch a short-lived presigned URL / HLS master
             if (!src && track.id) {
                 try {
-                    const { streamUrl } = await getStreamUrlService(track.id);
-                    src = streamUrl;
+                    const res = await getStreamUrlService(track.id);
+                    src = res.streamUrl;
+                    type = res.type || "mp3";
                 } catch (err) {
                     console.error("[Player] Failed to get stream URL:", err);
                     dispatch(setPlaying(false));
@@ -80,8 +94,32 @@ export const PlayerProvider = ({ children }) => {
                 return;
             }
 
-            audio.src = src;
-            audio.load();
+            const isHls = type === "hls" || /\.m3u8(\?|$)/i.test(src);
+
+            if (isHls && !audio.canPlayType("application/vnd.apple.mpegurl") && Hls.isSupported()) {
+                // Use hls.js for browsers without native HLS (Chrome, Firefox).
+                // xhrSetup sends the auth cookie with every playlist/segment request.
+                const hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: false,
+                    xhrSetup: (xhr) => {
+                        xhr.withCredentials = true;
+                    },
+                });
+                hlsRef.current = hls;
+                hls.loadSource(src);
+                hls.attachMedia(audio);
+                await new Promise((resolve) => {
+                    hls.once(Hls.Events.MANIFEST_PARSED, resolve);
+                    hls.once(Hls.Events.ERROR, (_e, data) => {
+                        if (data?.fatal) resolve();
+                    });
+                });
+            } else {
+                // Native playback (Safari for HLS, all browsers for MP3)
+                audio.src = src;
+                audio.load();
+            }
 
             try {
                 await audio.play();

@@ -7,6 +7,9 @@ const env = process.env;
 const config = {
     nodeEnv: env.NODE_ENV || "development",
     port: env.PORT || 3000,
+    // Full public URL of this server — used to build self-referencing HLS proxy URLs.
+    // Override with SERVER_URL=https://api.example.com in production.
+    serverUrl: env.SERVER_URL || `http://localhost:${env.PORT || 3000}`,
     clientOrigin: env.CLIENT_ORIGIN || "http://localhost:5173",
     apiPrefix: "/api/v1",
 
