@@ -1,6 +1,6 @@
-import asyncHandler from "../../core/http/async-handler.js";
+import asyncHandler from "../../lib/async-handler.js";
 import recommendationService from "./recommendation.service.js";
-import ApiError from "../../core/http/api-error.js";
+import ApiError from "../../lib/api-error.js";
 
 const okPaginated = (res, payload) =>
     res.status(200).json({ success: true, ...payload });
@@ -18,10 +18,7 @@ export const getPopular = asyncHandler(async (req, res) => {
 
 export const getEpisodesYouMightLike = asyncHandler(async (req, res) => {
     const userId = req.user?._id || req.user?.id;
-    const data = await recommendationService.episodesYouMightLike(
-        req.query,
-        userId
-    );
+    const data = await recommendationService.episodesYouMightLike(req.query, userId);
     return okPaginated(res, data);
 });
 

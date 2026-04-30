@@ -1,14 +1,11 @@
-import playlistRepository from "./playlist.repository.js";
-import ApiError from "../../core/http/api-error.js";
+import * as playlistDao from "./playlist.dao.js";
+import ApiError from "../../lib/api-error.js";
 
-/**
- * Loads the playlist by ID and attaches it to `req.playlist`.
- */
 export const loadPlaylist = async (req, res, next) => {
     try {
         const { playlistId } = req.params;
         if (!playlistId) throw ApiError.badRequest("Playlist ID is required");
-        const playlist = await playlistRepository.findById(playlistId);
+        const playlist = await playlistDao.findById(playlistId);
         if (!playlist) throw ApiError.notFound("Playlist not found");
         req.playlist = playlist;
         next();
@@ -17,9 +14,6 @@ export const loadPlaylist = async (req, res, next) => {
     }
 };
 
-/**
- * Owner-only guard.
- */
 export const canManagePlaylist = (req, res, next) => {
     const userId = String(req.user?.id || "");
     const ownerId = String(req.playlist?.owner || "");
@@ -29,9 +23,6 @@ export const canManagePlaylist = (req, res, next) => {
     next();
 };
 
-/**
- * Owner OR collaborator guard.
- */
 export const canModifyPlaylistTracks = (req, res, next) => {
     const userId = String(req.user?.id || "");
     const ownerId = String(req.playlist?.owner || "");

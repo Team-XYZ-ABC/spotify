@@ -1,6 +1,10 @@
-import asyncHandler from "../../core/http/async-handler.js";
-import libraryService from "./library.service.js";
+import asyncHandler from "../../lib/async-handler.js";
+import ApiError from "../../lib/api-error.js";
 
-export const getLikedTracks = asyncHandler(() => libraryService.getLikedTracks());
-export const likeTrack = asyncHandler(() => libraryService.likeTrack());
-export const unlikeTrack = asyncHandler(() => libraryService.unlikeTrack());
+const notImplemented = asyncHandler(async () => {
+    throw ApiError.notImplemented();
+});
+
+export const getLikedTracks = notImplemented;
+export const likeTrack = notImplemented;
+export const unlikeTrack = notImplemented;

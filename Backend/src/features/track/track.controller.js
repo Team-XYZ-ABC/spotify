@@ -1,6 +1,6 @@
 import trackService from "./track.service.js";
-import asyncHandler from "../../core/http/async-handler.js";
-import response from "../../core/http/api-response.js";
+import asyncHandler from "../../lib/async-handler.js";
+import response from "../../lib/api-response.js";
 
 export const getTrack = asyncHandler(async (req, res) => {
     const data = await trackService.getTrack(req.params.trackId);
@@ -32,7 +32,6 @@ export const getMyTracks = asyncHandler(async (req, res) => {
     return response.ok(res, { message: "Tracks fetched successfully", data });
 });
 
-// ── Reserved endpoints (not yet implemented) ─────────────────────────────────
 const stub = (label) =>
     asyncHandler(async (req, res) =>
         response.ok(res, { message: `${label} endpoint not implemented` })

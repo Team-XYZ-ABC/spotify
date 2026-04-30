@@ -1,4 +1,4 @@
-import asyncHandler from "../../core/http/async-handler.js";
+import asyncHandler from "../../lib/async-handler.js";
 import searchService from "./search.service.js";
 
 export const searchAll = asyncHandler(async (req, res) => {

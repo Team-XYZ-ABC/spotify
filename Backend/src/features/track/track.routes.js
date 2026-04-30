@@ -16,7 +16,7 @@ import isAuthenticated from "../../middlewares/auth.middleware.js";
 import authRole from "../../middlewares/authRole.middleware.js";
 import validate from "../../middlewares/validate.middleware.js";
 import { updateTrackSchema, uploadTrackSchema } from "./track.validation.js";
-import { ROLES } from "../../core/constants/index.js";
+import { ROLES } from "../../constants.js";
 
 const router = Router();
 

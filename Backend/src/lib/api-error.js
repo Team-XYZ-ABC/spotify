@@ -1,11 +1,5 @@
-import { ERROR_CODES, HTTP_STATUS } from "../constants/index.js";
+import { ERROR_CODES, HTTP_STATUS } from "../constants.js";
 
-/**
- * Standard application error class.
- *
- * Throw this from services/repositories instead of res.status().
- * The global error handler converts it to a uniform HTTP response.
- */
 export default class ApiError extends Error {
     constructor(statusCode, message, code = ERROR_CODES.INTERNAL, details = null) {
         super(message);

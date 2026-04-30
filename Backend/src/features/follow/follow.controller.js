@@ -1,8 +1,10 @@
-import asyncHandler from "../../core/http/async-handler.js";
-import followService from "./follow.service.js";
+import asyncHandler from "../../lib/async-handler.js";
+import ApiError from "../../lib/api-error.js";
 
-export const followArtist = asyncHandler(() => followService.followArtist());
-export const unfollowArtist = asyncHandler(() => followService.unfollowArtist());
-export const getArtistFollowers = asyncHandler(() =>
-    followService.getArtistFollowers()
-);
+const notImplemented = asyncHandler(async () => {
+    throw ApiError.notImplemented();
+});
+
+export const followArtist = notImplemented;
+export const unfollowArtist = notImplemented;
+export const getArtistFollowers = notImplemented;

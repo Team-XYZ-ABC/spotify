@@ -1,18 +1,16 @@
-import { storage } from "../core/storage/index.js";
-import { URL_TTL } from "../core/constants/index.js";
+import { getReadUrl, getKeyFromUrl, getPublicUrl } from "../lib/storage.js";
+import { URL_TTL } from "../constants.js";
 
 /**
  * Resolve a stored object's display URL (presigned GET).
- *
- *   - prefers explicit `key` field if present (e.g. avatarKey, coverImageKey)
- *   - falls back to extracting key from a stored CDN URL
- *   - returns the original URL on any failure (never throws)
+ * Falls back to extracting the key from a stored URL.
+ * Returns the original URL on any failure (never throws).
  */
 export const signObjectUrl = async (key, fallbackUrl, expiresIn = URL_TTL.ONE_DAY) => {
-    const resolvedKey = key || storage.getKeyFromUrl(fallbackUrl);
+    const resolvedKey = key || getKeyFromUrl(fallbackUrl);
     if (!resolvedKey) return fallbackUrl || null;
     try {
-        return await storage.getReadUrl(resolvedKey, expiresIn);
+        return await getReadUrl(resolvedKey, expiresIn);
     } catch {
         return fallbackUrl || null;
     }
@@ -20,8 +18,6 @@ export const signObjectUrl = async (key, fallbackUrl, expiresIn = URL_TTL.ONE_DA
 
 /**
  * Replace a list of objects' image fields in-place with signed URLs.
- *
- *   await signImages(items, { keyField: 'coverImageKey', urlField: 'coverImage' });
  */
 export const signImages = async (
     items,
@@ -35,7 +31,4 @@ export const signImages = async (
         })
     );
 
-/**
- * Build a stable public URL for a freshly-uploaded object (e.g. saving to DB).
- */
-export const publicUrl = (key) => storage.getPublicUrl(key);
+export const publicUrl = (key) => getPublicUrl(key);

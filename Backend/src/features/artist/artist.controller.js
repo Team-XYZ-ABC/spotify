@@ -1,11 +1,15 @@
-import asyncHandler from "../../core/http/async-handler.js";
-import artistService from "./artist.service.js";
+import asyncHandler from "../../lib/async-handler.js";
+import ApiError from "../../lib/api-error.js";
 
-export const getArtist = asyncHandler(() => artistService.getArtist());
-export const getArtistTopTracks = asyncHandler(() => artistService.getArtistTopTracks());
-export const getArtistAlbums = asyncHandler(() => artistService.getArtistAlbums());
-export const getArtistSingles = asyncHandler(() => artistService.getArtistSingles());
-export const getArtistAppearsOn = asyncHandler(() => artistService.getArtistAppearsOn());
-export const getArtistFollowers = asyncHandler(() => artistService.getArtistFollowers());
-export const getArtistAnalytics = asyncHandler(() => artistService.getArtistAnalytics());
-export const updateArtistProfile = asyncHandler(() => artistService.updateArtistProfile());
+const notImplemented = asyncHandler(async () => {
+    throw ApiError.notImplemented();
+});
+
+export const getArtist = notImplemented;
+export const getArtistTopTracks = notImplemented;
+export const getArtistAlbums = notImplemented;
+export const getArtistSingles = notImplemented;
+export const getArtistAppearsOn = notImplemented;
+export const getArtistFollowers = notImplemented;
+export const getArtistAnalytics = notImplemented;
+export const updateArtistProfile = notImplemented;

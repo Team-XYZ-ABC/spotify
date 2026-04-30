@@ -1,8 +1,3 @@
-/**
- * Application-wide constants.
- * Avoid magic numbers/strings scattered across the codebase.
- */
-
 export const HTTP_STATUS = {
     OK: 200,
     CREATED: 201,
@@ -36,13 +31,6 @@ export const ERROR_CODES = {
 export const PLAYLIST_LIMITS = {
     MAX_COLLABORATORS: 10,
     MAX_TRACKS: 100,
-};
-
-export const STORAGE_FOLDERS = {
-    AUDIO: "audio",
-    COVERS: "covers",
-    AVATARS: "avatars",
-    PROFILES: "profiles",
 };
 
 export const URL_TTL = {

@@ -1,10 +1,10 @@
 import authService from "./auth.service.js";
-import asyncHandler from "../../core/http/async-handler.js";
-import response from "../../core/http/api-response.js";
-import config from "../../config/index.js";
+import asyncHandler from "../../lib/async-handler.js";
+import response from "../../lib/api-response.js";
+import config from "../../config.js";
 import { authCookieOptions, authCookieClearOptions } from "../../utils/cookie.util.js";
 import { jwtVerify } from "../../utils/jwt.util.js";
-import ApiError from "../../core/http/api-error.js";
+import ApiError from "../../lib/api-error.js";
 
 export const isEmailExist = asyncHandler(async (req, res) => {
     const exists = await authService.emailExists(req.body.email);

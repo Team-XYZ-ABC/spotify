@@ -1,6 +1,6 @@
 import userService from "./user.service.js";
-import asyncHandler from "../../core/http/async-handler.js";
-import response from "../../core/http/api-response.js";
+import asyncHandler from "../../lib/async-handler.js";
+import response from "../../lib/api-response.js";
 
 export const getProfile = asyncHandler(async (req, res) => {
     const data = await userService.getMyProfile(req.user.id);
@@ -23,7 +23,6 @@ export const getOtherUserProfile = asyncHandler(async (req, res) => {
     });
 });
 
-// Stubs preserved from legacy implementation
 export const getHistory = asyncHandler(async (req, res) =>
     response.ok(res, { message: "History endpoint not implemented", data: [] })
 );

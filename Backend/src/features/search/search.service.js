@@ -1,4 +1,4 @@
-import { searchRepository, signSearchItem } from "./search.repository.js";
+import * as searchDao from "./search.dao.js";
 
 const buildSuggestions = (tracks, artists, albums, q) => {
     const all = [
@@ -29,40 +29,34 @@ const buildSuggestions = (tracks, artists, albums, q) => {
     return out.slice(0, 5);
 };
 
-class SearchService {
-    emptyResults() {
-        return { tracks: [], artists: [], albums: [], textSuggestions: [] };
-    }
+const emptyResults = () => ({
+    tracks: [],
+    artists: [],
+    albums: [],
+    textSuggestions: [],
+});
 
-    async searchAll(q) {
-        if (!q) return this.emptyResults();
+const searchAll = async (q) => {
+    if (!q) return emptyResults();
 
-        const [rawTracks, rawArtists, rawAlbums] =
-            await searchRepository.searchAllSafe(q);
+    const [rawTracks, rawArtists, rawAlbums] = await searchDao.searchAllSafe(q);
 
-        const [tracks, artists, albums] = await Promise.all([
-            Promise.all(rawTracks.map(signSearchItem)),
-            Promise.all(rawArtists.map(signSearchItem)),
-            Promise.all(rawAlbums.map(signSearchItem)),
-        ]);
+    const [tracks, artists, albums] = await Promise.all([
+        Promise.all(rawTracks.map(searchDao.signSearchItem)),
+        Promise.all(rawArtists.map(searchDao.signSearchItem)),
+        Promise.all(rawAlbums.map(searchDao.signSearchItem)),
+    ]);
 
-        return {
-            tracks,
-            artists,
-            albums,
-            textSuggestions: buildSuggestions(tracks, artists, albums, q),
-        };
-    }
+    return {
+        tracks,
+        artists,
+        albums,
+        textSuggestions: buildSuggestions(tracks, artists, albums, q),
+    };
+};
 
-    searchTracks(q) {
-        return searchRepository.searchTracks(q);
-    }
-    searchArtists(q) {
-        return searchRepository.searchArtists(q);
-    }
-    searchAlbums(q) {
-        return searchRepository.searchAlbums(q);
-    }
-}
+const searchTracks = (q) => searchDao.searchTracks(q);
+const searchArtists = (q) => searchDao.searchArtists(q);
+const searchAlbums = (q) => searchDao.searchAlbums(q);
 
-export default new SearchService();
+export default { searchAll, searchTracks, searchArtists, searchAlbums };

@@ -1,10 +1,7 @@
 import { jwtVerify } from "../utils/jwt.util.js";
-import config from "../config/index.js";
-import ApiError from "../core/http/api-error.js";
+import config from "../config.js";
+import ApiError from "../lib/api-error.js";
 
-/**
- * Require a valid auth cookie. Attaches `req.user = { id, role }`.
- */
 const isAuthenticated = (req, res, next) => {
     try {
         const token = req.cookies?.[config.auth.cookieName];
@@ -17,16 +14,12 @@ const isAuthenticated = (req, res, next) => {
     }
 };
 
-/**
- * Optional auth — attaches `req.user` if a valid token is present
- * but never rejects the request.
- */
 export const optionalAuth = (req, res, next) => {
     try {
         const token = req.cookies?.[config.auth.cookieName];
         if (token) req.user = jwtVerify(token);
     } catch {
-        // ignore — keep req.user undefined
+        // ignore
     }
     next();
 };

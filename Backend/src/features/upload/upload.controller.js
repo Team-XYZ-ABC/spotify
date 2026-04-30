@@ -1,5 +1,5 @@
-import asyncHandler from "../../core/http/async-handler.js";
-import response from "../../core/http/api-response.js";
+import asyncHandler from "../../lib/async-handler.js";
+import response from "../../lib/api-response.js";
 import uploadService from "./upload.service.js";
 
 export const getPresignedUrl = asyncHandler(async (req, res) => {

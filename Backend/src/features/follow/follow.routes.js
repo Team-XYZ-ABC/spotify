@@ -5,7 +5,7 @@ import {
     getArtistFollowers,
     unfollowArtist,
 } from "./follow.controller.js";
-import { ROLES } from "../../core/constants/index.js";
+import { ROLES } from "../../constants.js";
 
 const router = Router();
 
