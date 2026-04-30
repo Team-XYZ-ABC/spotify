@@ -93,7 +93,8 @@ export const registerUser = async (req, res) => {
         if (userRole === "artist") {
             await ArtistModel.create(
                 [{
-                    user: newUser._id
+                    user: newUser._id,
+                    stageName: displayName || username ,
                 }],
                 { session }
             );

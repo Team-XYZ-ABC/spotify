@@ -3,6 +3,7 @@ import userReducer from './slices/auth.slice'
 import profileReducer from "./slices/profile.slice"
 import playlistReducer from "./slices/playlist.slice"
 import playerReducer from "./slices/player.slice"
+import searchReducer from "./slices/search.slice"
 
 const store = configureStore({
     reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
         profile: profileReducer,
         playlist: playlistReducer,
         player: playerReducer,
+        search: searchReducer
     }
 })
 
