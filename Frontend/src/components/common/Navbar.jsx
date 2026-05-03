@@ -30,9 +30,10 @@ const Navbar = ({ toggleSidebar }) => {
   }, []);
 
   const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-    setShowDropdown(true);
-  };
+  const value = e.target.value;
+  setSearch(value);
+  setShowDropdown(value.trim().length > 0);
+};
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -42,10 +43,11 @@ const Navbar = ({ toggleSidebar }) => {
     }
   };
 
-  const hasResults = results.textSuggestions.length > 0 ||
-                     results.artistSuggestions.length > 0 ||
-                     results.albumSuggestions.length > 0 ||
-                     results.trackSuggestions.length > 0;
+  const hasResults =
+  (results?.textSuggestions?.length || 0) > 0 ||
+  (results?.artists?.length || 0) > 0 ||
+  (results?.albums?.length || 0) > 0 ||
+  (results?.tracks?.length || 0) > 0;
 
   return (
     <div className="w-full h-16 flex items-center justify-between px-3 md:px-6 text-white gap-3">
@@ -68,7 +70,7 @@ const Navbar = ({ toggleSidebar }) => {
               value={search}
               onChange={handleSearchChange}
               onKeyDown={handleKeyDown}
-              onFocus={() => search && setShowDropdown(true)}
+              onFocus={() => search.trim() && setShowDropdown(true)}
               placeholder="What do you want to play?"
               className="bg-transparent outline-none w-full text-sm placeholder-gray-400 truncate"
             />
@@ -80,10 +82,10 @@ const Navbar = ({ toggleSidebar }) => {
                   <div className="px-4 py-3 text-sm text-gray-400">Searching...</div>
                 ) : hasResults ? (
                   <>
-                    <TextSuggestionResults suggestions={results.textSuggestions} query={search} />
-                    <ArtistSuggestionResults artists={results.artistSuggestions} query={search} />
-                    <AlbumSuggestionResults albums={results.albumSuggestions} query={search} />
-                    <TrackSuggestionResults tracks={results.trackSuggestions} query={search} />
+                    {/* <TextSuggestionResults suggestions={results.textSuggestions} query={search} /> */}
+                    <TrackSuggestionResults tracks={results.tracks} query={search} />
+                    <AlbumSuggestionResults albums={results.albums} query={search} />
+                    <ArtistSuggestionResults artists={results.artists} query={search} />
                   </>
                 ) : (
                   <div className="px-4 py-3 text-sm text-zinc-400">No results found for "{search}"</div>
@@ -120,7 +122,7 @@ const Navbar = ({ toggleSidebar }) => {
             {user?.avatar ? (
               <img className="h-full w-full object-cover" src={user.avatar} alt="avatar" />
             ) : (
-              <h1>{user?.username?.toUpperCase()[0]}</h1>
+              <h1>{user?.username?.toUpperCase()?.[0] || "U"}</h1>
             )}
           </div>
           {showProfile && <UserMenuCard setShowProfile={setShowProfile} profileRef={profileRef}/>}

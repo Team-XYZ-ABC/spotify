@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { updatePlaylistSchema, validate } from "../../../validators";
 
 const EditPlaylistModal = ({ isOpen, onClose, onSubmit, isSubmitting, playlist }) => {
     const [name, setName] = useState("");
@@ -18,18 +19,19 @@ const EditPlaylistModal = ({ isOpen, onClose, onSubmit, isSubmitting, playlist }
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        if (!name.trim()) {
-            setError("Playlist name is required");
+        const { values, errors } = validate(updatePlaylistSchema, {
+            name: name.trim(),
+            description: description.trim(),
+            coverImage: coverImage.trim() || undefined,
+        });
+
+        if (errors) {
+            setError(errors.name || errors.description || errors.coverImage || "Validation failed");
             return;
         }
 
         setError("");
-
-        await onSubmit({
-            name: name.trim(),
-            description: description.trim(),
-            coverImage: coverImage.trim(),
-        });
+        await onSubmit(values);
     };
 
     return (

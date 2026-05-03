@@ -70,6 +70,7 @@ const SongsTable = ({ songs, onRemoveTrack, canModifyTracks, onReorder, onPlay, 
                                     src={song?.image}
                                     alt={song.title}
                                     className="w-14 h-14 rounded object-cover"
+                                    onError={(e) => { e.currentTarget.style.display = "none"; }}
                                 />
                             )
                             : (

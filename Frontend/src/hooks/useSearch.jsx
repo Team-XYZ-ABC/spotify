@@ -1,84 +1,82 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { debounce } from "lodash";
-import { dummyUsers, dummyArtists, dummyTracks, dummyAlbums, dummyPlaylists } from "../data/searchData";
-
-// Helper to get user object for an artist
-const getUserByArtistId = (artistId) => {
-  const artist = dummyArtists.find(a => a.user.$oid === artistId);
-  if (!artist) return null;
-  return dummyUsers.find(u => u._id.$oid === artist.user.$oid);
-};
+import { useDispatch, useSelector } from "react-redux";
+import { searchService } from "../services/search.service";
+import { setLoading, setResults } from "../redux/slices/search.slice";
 
 export const useSearch = (query) => {
-  const [results, setResults] = useState({
-    textSuggestions: [],
-    artistSuggestions: [],
-    albumSuggestions: [],
-    trackSuggestions: [],
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
 
-  const performSearch = useCallback((searchTerm) => {
+  const results = useSelector((state) => state.search.results);
+  const isLoading = useSelector((state) => state.search.loading);
+
+  const performSearch = useCallback(async (searchTerm) => {
     if (!searchTerm.trim()) {
-      setResults({ textSuggestions: [], artistSuggestions: [], albumSuggestions: [], trackSuggestions: [] });
-      setIsLoading(false);
+      dispatch(setResults({
+        tracks: [],
+        artists: [],
+        albums: [],
+        textSuggestions: []
+      }));
       return;
     }
 
-    setIsLoading(true);
-    const term = searchTerm.toLowerCase();
+    try {
+      dispatch(setLoading());
 
-    // ---- Text Suggestions (from combined pool) ----
-    const textPool = [
-      ...dummyUsers.map(u => ({ type: "user", name: u.displayName, data: u })),
-      ...dummyAlbums.map(a => ({ type: "album", name: a.title, data: a })),
-      ...dummyTracks.map(t => ({ type: "track", name: t.title, data: t })),
-      ...dummyPlaylists.map(p => ({ type: "playlist", name: p.name, data: p })),
-    ];
+      const data = await searchService(searchTerm);
 
-    let matches = textPool.filter(item => item.name.toLowerCase().includes(term));
-    // Check for exact match
-    const exactMatch = matches.find(item => item.name.toLowerCase() === term);
-    let textSuggestions = [];
-    if (exactMatch) {
-      textSuggestions = [exactMatch];
-    } else {
-      textSuggestions = matches.slice(0, 4);
-    }
+      let finalData = {
+        tracks: data.tracks || [],
+        artists: data.artists || [],
+        albums: data.albums || [],
+        textSuggestions: []
+      };
 
-    // ---- Artist Suggestions (up to 2) ----
-    const artistMatches = dummyArtists
-      .map(artist => {
-        const user = getUserByArtistId(artist.user.$oid);
-        if (!user) return null;
-        const displayName = user.displayName;
-        const username = user.username;
-        if (displayName.toLowerCase().includes(term) || username.toLowerCase().includes(term)) {
-          return { ...artist, user };
+      // 🔥 textSuggestions handling
+      if (data.textSuggestions) {
+        finalData.textSuggestions = data.textSuggestions;
+      } else {
+        const combined = [
+          ...finalData.tracks.map(t => ({ name: t.title, type: "track" })),
+          ...finalData.artists.map(a => ({ name: a.stageName, type: "artist" })),
+          ...finalData.albums.map(a => ({ name: a.title, type: "album" }))
+        ];
+
+        const lowerQ = searchTerm.toLowerCase();
+        combined.sort((a, b) => {
+          const aName = (a.name || "").toLowerCase();
+          const bName = (b.name || "").toLowerCase();
+          
+          const aScore = aName === lowerQ ? 3 : (aName.startsWith(lowerQ) ? 2 : (aName.includes(lowerQ) ? 1 : 0));
+          const bScore = bName === lowerQ ? 3 : (bName.startsWith(lowerQ) ? 2 : (bName.includes(lowerQ) ? 1 : 0));
+          
+          if (aScore !== bScore) return bScore - aScore;
+          return aName.length - bName.length;
+        });
+
+        const uniqueSuggestions = [];
+        const seen = new Set();
+        for (const item of combined) {
+          if (!seen.has(item.name)) {
+            seen.add(item.name);
+            uniqueSuggestions.push(item);
+          }
         }
-        return null;
-      })
-      .filter(Boolean);
-    const artistSuggestions = artistMatches.slice(0, 2);
+        finalData.textSuggestions = uniqueSuggestions.slice(0, 5);
+      }
 
-    // ---- Album Suggestions (up to 2) ----
-    const albumMatches = dummyAlbums.filter(album => album.title.toLowerCase().includes(term));
-    const albumSuggestions = albumMatches.slice(0, 2);
+      dispatch(setResults(finalData));
 
-    // ---- Track Suggestions (up to 2) ----
-    const trackMatches = dummyTracks.filter(track => track.title.toLowerCase().includes(term));
-    const trackSuggestions = trackMatches.slice(0, 2);
+    } catch (error) {
+      console.error("Search error:", error);
+    }
+  }, [dispatch]);
 
-    setResults({
-      textSuggestions,
-      artistSuggestions,
-      albumSuggestions,
-      trackSuggestions,
-    });
-    setIsLoading(false);
-  }, []);
-
-  const debouncedSearch = useCallback(debounce(performSearch, 300), [performSearch]);
+  const debouncedSearch = useCallback(
+    debounce(performSearch, 300),
+    [performSearch]
+  );
 
   useEffect(() => {
     debouncedSearch(query);
