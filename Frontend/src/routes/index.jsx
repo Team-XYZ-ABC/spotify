@@ -45,10 +45,7 @@ export const router = createBrowserRouter([
                 children: [
                     // Just drop public paths here in the future
                     // { path: "/about", element: <About /> },
-                    {
-                        path: "/track/:trackId",
-                        element: <ViewTrack/>
-                    }
+                    
                 ],
             },
 
@@ -66,6 +63,7 @@ export const router = createBrowserRouter([
                     { path: "/playlist", element: <PlaylistList /> },
                     { path: "/playlist/:playlistId", element: <Playlist /> },
                     { path: "/profile", element: <UserProfile /> },
+                    { path: "/track/:trackId", element: <ViewTrack/>}
                 ],
             },
             { path: "/account", element: <AccountPage /> },
