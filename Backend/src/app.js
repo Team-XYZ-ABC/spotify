@@ -1,21 +1,26 @@
-import express from 'express';
-import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import indexRouter from './routes/index.route.js';
-import cors from 'cors';
+import express from "express";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import config from "./config.js";
+import routes from "./routes.js";
+import { globalErrorHandler, notFoundHandler } from "./lib/error-handler.js";
 
 const app = express();
 
-app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true
-}));
-
+app.use(cors({ origin: config.clientOrigin, credentials: true }));
 app.use(express.json());
-app.use(morgan("dev"))
-app.use(express.urlencoded({extended: true}))
-app.use(cookieParser())
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan("dev"));
 
-app.use('/api/v1', indexRouter)
+app.use(config.apiPrefix, routes);
 
-export default app
+app.get("/health", (req, res) =>
+    res.json({ status: "ok", timestamp: new Date().toISOString() })
+);
+
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
+
+export default app;

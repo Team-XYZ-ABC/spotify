@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Outlet } from 'react-router'
-import useAuth from './hooks/useAuth'
-import Loader from './components/ui/Loader'
+import useAuth from '@/features/auth/hooks/useAuth'
+import Loader from '@/shared/components/ui/Loader'
 
 const App = () => {
   const { getMe, isInitializing } = useAuth()

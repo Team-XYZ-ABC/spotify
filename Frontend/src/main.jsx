@@ -1,10 +1,10 @@
 import { createRoot } from "react-dom/client";
-import "./index.css";
+import "@/index.css";
 import { RouterProvider } from "react-router";
 import { Provider } from "react-redux";
-import store from "./redux/app.redux.jsx";
-import { router } from "./routes/index.jsx";
-import { PlayerProvider } from "./contexts/PlayerContext.jsx";
+import store from "@/app/store";
+import { router } from "@/app/routes";
+import { PlayerProvider } from "@/features/player/contexts/PlayerContext";
 
 createRoot(document.getElementById("root")).render(
     <Provider store={store}>
