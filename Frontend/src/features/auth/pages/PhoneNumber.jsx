@@ -56,11 +56,10 @@ const PhoneNumber = () => {
                     onClick={handleContinue}
                     disabled={!isValid}
                     className={`mt-4 py-3 rounded-full font-bold transition 
-          ${
-                        isValid
+          ${isValid
                             ? "bg-green-500 text-black hover:scale-[1.02] active:scale-[0.98]"
                             : "text-gray-400 border cursor-not-allowed"
-                    }`}
+                        }`}
                 >
                     Continue
                 </button>
