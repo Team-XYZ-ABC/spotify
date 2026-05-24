@@ -23,6 +23,8 @@ const RegisterStep1 = () => {
         password: "",
         role: "listener",
     });
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
     const { registerUser, loading, error } = useAuth();
     const [strength, setStrength] = useState("");
@@ -31,14 +33,20 @@ const RegisterStep1 = () => {
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+        console.log(form)
 
         if (e.target.name === "password") {
             const val = e.target.value;
+            const hasUpper = /[A-Z]/.test(val);
+            const hasLower = /[a-z]/.test(val);
+            const hasNum = /[0-9]/.test(val);
+            const hasSpecial = /[^A-Za-z0-9]/.test(val);
+            const validLen = val.length >= 8 && val.length <= 12;
 
-            if (val.length < 6) setStrength("Weak");
-            else if (val.match(/^(?=.*[A-Z])(?=.*\d).{6,}$/)) {
-                setStrength("Strong");
-            } else setStrength("Medium");
+            const score = [hasUpper, hasLower, hasNum, hasSpecial, validLen].filter(Boolean).length;
+            if (score <= 2) setStrength("Weak");
+            else if (score <= 4) setStrength("Medium");
+            else setStrength("Strong");
         }
     };
 
@@ -100,16 +108,32 @@ const RegisterStep1 = () => {
                     {form.password && (
                         <p
                             className={`text-sm font-semibold ${strength === "Weak"
-                                    ? "text-red-500"
-                                    : strength === "Medium"
-                                        ? "text-yellow-500"
-                                        : "text-green-500"
+                                ? "text-red-500"
+                                : strength === "Medium"
+                                    ? "text-yellow-500"
+                                    : "text-green-500"
                                 }`}
                         >
                             {strength} Password
                         </p>
                     )}
                     {fieldErrors.password && <p className="text-red-400 text-xs">{fieldErrors.password}</p>}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold">Confirm Password</label>
+                    <input
+                        type="password"
+                        name="confirmPassword"
+                        value={confirmPassword}
+                        onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            setConfirmPasswordError("");
+                        }}
+                        placeholder="Re-enter password"
+                        className="bg-transparent border border-gray-500 p-3 rounded-md focus:outline-none focus:border-white"
+                    />
+                    {confirmPasswordError && <p className="text-red-400 text-xs">{confirmPasswordError}</p>}
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -122,8 +146,8 @@ const RegisterStep1 = () => {
                             onClick={() =>
                                 setForm({ ...form, role: "listener" })}
                             className={`flex-1 py-2 rounded-md cursor-pointer border ${form.role === "listener"
-                                    ? "bg-green-500 text-black border-green-500"
-                                    : "border-gray-500"
+                                ? "bg-green-500 text-black border-green-500"
+                                : "border-gray-500"
                                 }`}
                         >
                             Listener
@@ -132,8 +156,8 @@ const RegisterStep1 = () => {
                         <button
                             onClick={() => setForm({ ...form, role: "artist" })}
                             className={`flex-1 py-2 rounded-md cursor-pointer border ${form.role === "artist"
-                                    ? "bg-green-500 text-black border-green-500"
-                                    : "border-gray-500"
+                                ? "bg-green-500 text-black border-green-500"
+                                : "border-gray-500"
                                 }`}
                         >
                             Artist
@@ -147,6 +171,11 @@ const RegisterStep1 = () => {
 
                 <button
                     onClick={() => {
+                        if (form.password !== confirmPassword) {
+                            setConfirmPasswordError("Passwords do not match");
+                            return;
+                        }
+                        setConfirmPasswordError("");
                         const { values, errors } = validate(registerSchema, form);
                         if (errors) { setFieldErrors(errors); return; }
                         setFieldErrors({});
