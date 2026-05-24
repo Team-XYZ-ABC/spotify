@@ -31,7 +31,7 @@ const Login = () => {
   return (
     <div className="min-h-screen p-14 sm:p-26 w-full bg-[#121212] flex flex-col gap-18 justify-between items-center text-white px-4">
 
-      <div className="w-80 flex flex-col gap-4">
+      <div className="w-80 flex flex-col gap-4 pt-48">
 
         <div className="flex flex-col items-center text-center gap-4">
           <div className="h-10 w-10">
