@@ -8,7 +8,26 @@ import { globalErrorHandler, notFoundHandler } from "./lib/error-handler.js";
 
 const app = express();
 
-app.use(cors({ origin: config.clientOrigin, credentials: true }));
+const allowedOrigins = [config.clientOrigin];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        
+        const isLocalhost = origin.startsWith("http://localhost:") || 
+                            origin.startsWith("http://127.0.0.1:") || 
+                            origin === "http://localhost" || 
+                            origin === "http://127.0.0.1";
+
+        if (allowedOrigins.includes(origin) || isLocalhost) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

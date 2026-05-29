@@ -42,22 +42,68 @@ const albumPipeline = (q, limit = 5) => [
     { $limit: limit },
 ];
 
-export const searchTracks = (q) => TrackModel.aggregate(trackPipeline(q));
-export const searchArtists = (q) => ArtistModel.aggregate(artistPipeline(q));
-export const searchAlbums = (q) => AlbumModel.aggregate(albumPipeline(q));
+export const searchTracks = async (q) => {
+    try {
+        return await TrackModel.aggregate(trackPipeline(q));
+    } catch (err) {
+        console.warn("[search] Atlas search failed for tracks, falling back to regex:", err.message);
+        return await TrackModel.find({
+            $or: [
+                { title: { $regex: q, $options: "i" } },
+                { genres: { $regex: q, $options: "i" } },
+                { artists: { $regex: q, $options: "i" } }
+            ],
+            isPublished: true
+        }).limit(10).lean();
+    }
+};
+
+export const searchArtists = async (q) => {
+    try {
+        return await ArtistModel.aggregate(artistPipeline(q));
+    } catch (err) {
+        console.warn("[search] Atlas search failed for artists, falling back to regex:", err.message);
+        return await ArtistModel.find({
+            $or: [
+                { stageName: { $regex: q, $options: "i" } },
+                { genres: { $regex: q, $options: "i" } }
+            ],
+            isActive: true
+        })
+        .populate({ path: "user" })
+        .limit(5)
+        .lean();
+    }
+};
+
+export const searchAlbums = async (q) => {
+    try {
+        return await AlbumModel.aggregate(albumPipeline(q));
+    } catch (err) {
+        console.warn("[search] Atlas search failed for albums, falling back to regex:", err.message);
+        return await AlbumModel.find({
+            $or: [
+                { title: { $regex: q, $options: "i" } },
+                { genres: { $regex: q, $options: "i" } }
+            ],
+            isPublic: true,
+            isDeleted: false
+        }).limit(5).lean();
+    }
+};
 
 export const searchAllSafe = (q) =>
     Promise.all([
         searchTracks(q).catch((err) => {
-            console.warn("[search] tracks error:", err.message);
+            console.warn("[search] tracks safe-catch:", err.message);
             return [];
         }),
         searchArtists(q).catch((err) => {
-            console.warn("[search] artists error:", err.message);
+            console.warn("[search] artists safe-catch:", err.message);
             return [];
         }),
         searchAlbums(q).catch((err) => {
-            console.warn("[search] albums error:", err.message);
+            console.warn("[search] albums safe-catch:", err.message);
             return [];
         }),
     ]);

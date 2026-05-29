@@ -6,8 +6,8 @@ const TrackList = ({ tracks }) => (
     <p className="text-sm text-gray-400 mb-6">Only visible to you</p>
 
     <div className="space-y-3">
-      {tracks.map((track) => (
-        <TrackItem key={track.id} track={track} />
+      {tracks.map((track, index) => (
+        <TrackItem key={track.id} track={track} tracks={tracks} index={index} />
       ))}
     </div>
   </>
