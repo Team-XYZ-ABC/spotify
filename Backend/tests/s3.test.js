@@ -3,13 +3,7 @@
  * Run: node tests/s3.test.js
  */
 
-import dotenv from "dotenv";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: resolve(__dirname, "../.env") });
-
+import config from "../src/config.js";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -19,14 +13,19 @@ const fail = (msg, err) => { console.error(`  ✗ ${msg}`); console.error(`    $
 
 // ─── 1. Env vars check ──────────────────────────────────────────────────────
 console.log("\n[1] Checking env vars...");
-const required = [
-    "AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_S3_BUCKET",
-    "CLOUDFRONT_DOMAIN", "CLOUDFRONT_KEY_PAIR_ID", "CLOUDFRONT_PRIVATE_KEY"
-];
+const required = {
+    region: config.s3.region,
+    accessKeyId: config.s3.accessKeyId,
+    secretAccessKey: config.s3.secretAccessKey,
+    bucket: config.s3.bucket,
+    domain: config.s3.cloudFront.domain,
+    keyPairId: config.s3.cloudFront.keyPairId,
+    privateKey: config.s3.cloudFront.privateKey
+};
 
 let envOk = true;
-for (const key of required) {
-    if (!process.env[key] || process.env[key].startsWith("FILL_THIS")) {
+for (const [key, val] of Object.entries(required)) {
+    if (!val || val.startsWith("FILL_THIS")) {
         fail(`${key} is missing or not filled`);
         envOk = false;
     } else {
@@ -42,18 +41,18 @@ if (!envOk) {
 // ─── 2. S3 bucket access ────────────────────────────────────────────────────
 console.log("\n[2] Testing S3 bucket access...");
 const s3 = new S3Client({
-    region: process.env.AWS_REGION,
+    region: config.s3.region,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        accessKeyId: config.s3.accessKeyId,
+        secretAccessKey: config.s3.secretAccessKey,
     },
 });
 
 try {
-    await s3.send(new HeadBucketCommand({ Bucket: process.env.AWS_S3_BUCKET }));
-    pass(`Bucket '${process.env.AWS_S3_BUCKET}' accessible`);
+    await s3.send(new HeadBucketCommand({ Bucket: config.s3.bucket }));
+    pass(`Bucket '${config.s3.bucket}' accessible`);
 } catch (err) {
-    fail(`Cannot access bucket '${process.env.AWS_S3_BUCKET}'`, err);
+    fail(`Cannot access bucket '${config.s3.bucket}'`, err);
 }
 
 // ─── 3. Presigned PUT URL generation ────────────────────────────────────────
@@ -61,7 +60,7 @@ console.log("\n[3] Testing presigned upload URL generation...");
 const testKey = `test/healthcheck-${Date.now()}.txt`;
 try {
     const cmd = new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET,
+        Bucket: config.s3.bucket,
         Key: testKey,
         ContentType: "text/plain",
     });
@@ -83,7 +82,7 @@ try {
 
     // ─── 5. Cleanup test file ────────────────────────────────────────────────
     console.log("\n[5] Cleaning up test file...");
-    await s3.send(new DeleteObjectCommand({ Bucket: process.env.AWS_S3_BUCKET, Key: testKey }));
+    await s3.send(new DeleteObjectCommand({ Bucket: config.s3.bucket, Key: testKey }));
     pass("Test file deleted from S3");
 
 } catch (err) {
@@ -94,10 +93,10 @@ try {
 console.log("\n[6] Testing CloudFront signed URL generation...");
 try {
     const { getSignedUrl: getCFUrl } = await import("@aws-sdk/cloudfront-signer");
-    const privateKey = process.env.CLOUDFRONT_PRIVATE_KEY.replace(/\\n/g, "\n");
+    const privateKey = config.s3.cloudFront.privateKey.replace(/\\n/g, "\n");
     const cfUrl = getCFUrl({
-        url: `https://${process.env.CLOUDFRONT_DOMAIN}/test/sample.mp3`,
-        keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID,
+        url: `https://${config.s3.cloudFront.domain}/test/sample.mp3`,
+        keyPairId: config.s3.cloudFront.keyPairId,
         privateKey,
         dateLessThan: new Date(Date.now() + 3600 * 1000).toISOString(),
     });
